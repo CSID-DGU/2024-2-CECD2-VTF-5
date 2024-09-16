@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>텍스트 요약 및 질문 생성기</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .box {
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            min-height: 150px;
+        }
+        .box-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #444;
+        }
+        #input-text {
+            width: 100%;
+            height: 120px;
+            resize: vertical;
+        }
+        #execute-btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #execute-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>텍스트 요약 및 질문 생성기</h1>
+    <div class="container">
+        <div class="box">
+            <div class="box-title">입력</div>
+            <textarea id="input-text" placeholder="여기에 텍스트를 입력하세요..."></textarea>
+        </div>
+        <button id="execute-btn">실행</button>
+        <div class="box">
+            <div class="box-title">요약</div>
+            <div id="summary"></div>
+        </div>
+        <div class="box">
+            <div class="box-title">질문</div>
+            <div id="questions"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('execute-btn').addEventListener('click', async function() {
+            const inputText = document.getElementById('input-text').value;
+    
+            // 서버로 POST 요청 보내기
+            try {
+                const response = await fetch('/generate_question', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams({
+                        'answer': inputText,
+                        'use_chat_context': false  // 대화 기록을 사용하지 않음
+                    })
+                });
+    
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`질문 생성에 실패했습니다: ${errorData.detail || '알 수 없는 오류'}`);
+                }
+    
+                const data = await response.json();
+                
+                // 서버에서 받은 요약과 질문 결과를 화면에 표시
+                document.getElementById('summary').textContent = "입력된 텍스트에 대한 요약입니다.";  // 요약 부분은 서버에서 제공하는 대로 수정하세요.
+    
+                // 질문을 번호와 함께 줄 바꿈하여 표시
+                const questions = data.question.split("\n").map(question => `<p>${question.trim()}</p>`).join('');
+                document.getElementById('questions').innerHTML = questions;
+                
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('summary').textContent = `오류가 발생했습니다: ${error.message}`;
+                document.getElementById('questions').innerHTML = "";
+            }
+        });
+    </script>
+</body>
+</html>
