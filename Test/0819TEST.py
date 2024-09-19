@@ -1,28 +1,25 @@
 import os
 import sqlite3
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
 from openai import OpenAI
 from langchain.prompts import PromptTemplate
-
-# FastAPI 앱 생성
-app = FastAPI()
 
 # .env 파일에서 환경 변수 로드
 load_dotenv()
 
-# 환경 변수에서 OpenAI API 키 가져오기
+# 환경 변수에서 키 가져오기
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # OpenAI 클라이언트 초기화
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-# SQLite 데이터베이스 연결 설정
-conn = sqlite3.connect('chat_history.db', check_same_thread=False)
-cursor = conn.cursor()
+# SQLite 데이터베이스 연결
+# 'chat_history.db'라는 이름의 SQLite 데이터베이스 파일을 생성하거나 연결
+conn = sqlite3.connect('chat_history.db')
+cursor = conn.cursor() # DB와 상호작용 하는 객체
 
 # 채팅 기록을 저장할 테이블 생성
+# 이미 테이블이 존재하면 새로 생성하지 않음
 cursor.execute('''CREATE TABLE IF NOT EXISTS chat_history
                   (id INTEGER PRIMARY KEY AUTOINCREMENT,
                    role TEXT,
@@ -30,6 +27,7 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS chat_history
 conn.commit()
 
 # 프롬프트 템플릿 정의
+# 이 템플릿은 AI가 자서전 작성을 위한 질문을 생성할 때 사용됨
 template = """당신은 AI 자서전 작성을 돕는 assistant입니다. 지금까지의 대화 내용을 바탕으로 맥락을 이해하며 다음 질문을 생성해야 합니다. 항상 존댓말을 사용하여 정중하게 질문해 주세요.
 
 대화 기록:
@@ -52,11 +50,6 @@ template = """당신은 AI 자서전 작성을 돕는 assistant입니다. 지금
 
 # PromptTemplate 객체 생성
 prompt = PromptTemplate(input_variables=["chat_history", "last_answer"], template=template)
-
-
-# 데이터 모델 정의
-class UserInput(BaseModel):
-    answer: str
 
 
 def get_chat_history():
@@ -91,35 +84,49 @@ def generate_question(chat_history, last_answer):
         ],
         temperature=0.7  # 응답의 창의성 조절 (0.0 ~ 1.0), 1에 가까울수록 창의적이고 0에 가까울수록 기존 질문과 유사한 질문을 생성함
     )
-    return response.choices[0].message.content.strip()  # Pydantic 모델로 반환
+    return response.choices[0].message.content.strip() # Pydantic 모델로 반환
 
 
-@app.post("/generate_question")
-async def generate_next_question(user_input: UserInput):
-    """
-    사용자의 마지막 답변을 받아 새로운 질문을 생성
-    """
-    chat_history = get_chat_history()
-    question = generate_question(chat_history, user_input.answer)
-    add_to_chat_history("assistant", question)
-    add_to_chat_history("user", user_input.answer)
-    return {"question": question}
+if __name__ == "__main__":
+    print("AI 구술 자서전 작성을 위한 질문 생성기입니다.")
+    print("종료하려면 'q'를 입력하세요.")
+    print("대화 내용을 보려면 'h'를 입력하세요.")
+
+    question_count = 0
+    last_answer = ""
+
+    while True:
+        # 첫 번째 질문은 미리 정의된 질문 사용
+        if question_count == 0:
+            question = "자신의 어린 시절에 대해 간단히 말씀해 주시겠어요?" # 첫 시작문장 예시
+        else:
+            # 이전 대화 기록을 바탕으로 새로운 질문 생성
+            chat_history = get_chat_history()
+            question = generate_question(chat_history, last_answer) # chat history와, 지금 하는 답변으로 질문생성함
+
+        print(f"\n질문: {question}")
+        add_to_chat_history("assistant", question) # 답변 내용은 chat history에 넣어줌 (assistant 라는 역할로 넣어줌)
+
+        user_input = input("답변: ")
+        if user_input.lower() == "q":
+            break
+        elif user_input.lower() == "h":
+            # 대화 기록 출력
+            print("\n대화 내용:")
+            for role, content in get_chat_history():
+                print(f"{role}: {content}")
+            print("\n")
+            continue
+
+        # 사용자 답변을 대화 기록에 추가
+        add_to_chat_history("user", user_input) # 사용자 답변은 user라고 넣어줌.
+        last_answer = user_input
+        question_count += 1
 
 
-@app.get("/chat_history")
-async def get_history():
-    """
-    대화 기록을 반환
-    """
-    history = get_chat_history()
-    return {"chat_history": history}
+    # cursor.execute("DELETE FROM chat_history") # 모든 테이블의 데이터를 삭제
+    # conn.commit() # 변경 사항 커밋
 
-
-@app.delete("/clear_chat_history")
-async def clear_chat_history():
-    """
-    대화 기록을 모두 삭제
-    """
-    cursor.execute("DELETE FROM chat_history")
-    conn.commit()
-    return {"message": "Chat history cleared."}
+    # 데이터베이스 연결 종료
+    conn.close()
+    print("\n프로그램을 종료합니다. 감사합니다.")

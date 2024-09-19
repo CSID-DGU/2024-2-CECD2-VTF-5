@@ -1,25 +1,20 @@
 import os
 import sqlite3
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
 from openai import OpenAI
 from langchain.prompts import PromptTemplate
-
-# FastAPI 앱 생성
-app = FastAPI()
 
 # .env 파일에서 환경 변수 로드
 load_dotenv()
 
-# 환경 변수에서 OpenAI API 키 가져오기
+# 환경 변수에서 키 가져오기
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # OpenAI 클라이언트 초기화
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-# SQLite 데이터베이스 연결 설정
-conn = sqlite3.connect('chat_history.db', check_same_thread=False)
+# SQLite 데이터베이스 연결
+conn = sqlite3.connect('chat_history.db')
 cursor = conn.cursor()
 
 # 채팅 기록을 저장할 테이블 생성
@@ -54,16 +49,19 @@ template = """당신은 AI 자서전 작성을 돕는 assistant입니다. 지금
 prompt = PromptTemplate(input_variables=["chat_history", "last_answer"], template=template)
 
 
-# 데이터 모델 정의
-class UserInput(BaseModel):
-    answer: str
-
-
 def get_chat_history():
     """
     DB에서 모든 채팅 기록을 가져옴
     """
     cursor.execute("SELECT role, content FROM chat_history")
+    return cursor.fetchall()
+
+
+def get_user_chat_history():
+    """
+    DB에서 사용자가 입력한 채팅 기록만 가져옴 (role이 'user'인 것만)
+    """
+    cursor.execute("SELECT content FROM chat_history WHERE role='user'")
     return cursor.fetchall()
 
 
@@ -79,47 +77,88 @@ def generate_question(chat_history, last_answer):
     """
     채팅 기록과 마지막 답변을 바탕으로 새로운 질문을 생성
     """
-    # 채팅 기록을 문자열로 변환
     chat_history_text = "\n".join([f"{role}: {content}" for role, content in chat_history])
 
-    # OpenAI API를 사용하여 새로운 질문 생성
     response = client.chat.completions.create(
         model="gpt-4",
         messages=[
             {"role": "system", "content": prompt.format(chat_history=chat_history_text, last_answer=last_answer)},
             {"role": "user", "content": "다음 질문을 생성해주세요."}
         ],
-        temperature=0.7  # 응답의 창의성 조절 (0.0 ~ 1.0), 1에 가까울수록 창의적이고 0에 가까울수록 기존 질문과 유사한 질문을 생성함
+        temperature=0.7
     )
-    return response.choices[0].message.content.strip()  # Pydantic 모델로 반환
+    return response.choices[0].message.content.strip()
 
 
-@app.post("/generate_question")
-async def generate_next_question(user_input: UserInput):
+def generate_autobiography(user_content):
     """
-    사용자의 마지막 답변을 받아 새로운 질문을 생성
+    사용자가 입력한 대화 내용을 바탕으로 자서전을 생성
     """
-    chat_history = get_chat_history()
-    question = generate_question(chat_history, user_input.answer)
-    add_to_chat_history("assistant", question)
-    add_to_chat_history("user", user_input.answer)
-    return {"question": question}
+    user_content_text = "\n".join([content for (content,) in user_content])
+
+    prompt_text = f"""당신은 AI 자서전 작성을 돕는 assistant입니다. 사용자가 제공한 아래 내용을 바탕으로 자서전의 일부를 작성해주세요.
+
+    사용자가 제공한 내용:
+    {user_content_text}
+
+    자서전 형식으로 정리된 내용:
+    """
+
+    response = client.chat.completions.create(
+        model="gpt-4",
+        messages=[
+            {"role": "system", "content": prompt_text},
+            {"role": "user", "content": "자서전으로 정리해주세요."}
+        ],
+        temperature=0.7
+    )
+    return response.choices[0].message.content.strip()
 
 
-@app.get("/chat_history")
-async def get_history():
-    """
-    대화 기록을 반환
-    """
-    history = get_chat_history()
-    return {"chat_history": history}
+if __name__ == "__main__":
+    print("AI 구술 자서전 작성을 위한 질문 생성기입니다.")
+    print("종료하려면 'q'를 입력하세요.")
+    print("대화 내용을 보려면 'h'를 입력하세요.")
 
+    question_count = 0
+    last_answer = ""
 
-@app.delete("/clear_chat_history")
-async def clear_chat_history():
-    """
-    대화 기록을 모두 삭제
-    """
-    cursor.execute("DELETE FROM chat_history")
-    conn.commit()
-    return {"message": "Chat history cleared."}
+    while True:
+        if question_count == 0:
+            question = "자신의 어린 시절에 대해 간단히 말씀해 주시겠어요?"
+        else:
+            chat_history = get_chat_history()
+            question = generate_question(chat_history, last_answer)
+
+        print(f"\n질문: {question}")
+        add_to_chat_history("assistant", question)
+
+        user_input = input("답변: ")
+        if user_input.lower() == "q":
+            break
+        elif user_input.lower() == "h":
+            print("\n대화 내용:")
+            for role, content in get_chat_history():
+                print(f"{role}: {content}")
+            print("\n")
+            continue
+
+        add_to_chat_history("user", user_input)
+        last_answer = user_input
+        question_count += 1
+
+    # 사용자 대화 기록을 가져옴 (DB를 닫기 전에)
+    user_chat_history = get_user_chat_history()
+
+    # 데이터베이스 연결 종료
+    conn.close()
+    print("\n프로그램을 종료합니다. 감사합니다.")
+
+    # 사용자의 대화 기록을 바탕으로 자서전 생성
+    autobiography = generate_autobiography(user_chat_history)
+
+    # 자서전 내용을 파일로 저장
+    with open('autobiography.txt', 'w', encoding='utf-8') as f:
+        f.write(autobiography)
+
+    print("자서전 파일이 생성되었습니다.")

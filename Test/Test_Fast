@@ -1,0 +1,47 @@
+from fastapi import FastAPI, Request
+from pydantic import BaseModel
+import os
+from langchain.llms import OpenAI
+from langchain.chains import LLMChain
+from langchain.memory import ConversationBufferMemory
+from langchain.prompts import PromptTemplate
+
+# 환경 변수 설정
+os.environ["OPENAI_API_KEY"] = "YOUR_OPENAI_API_KEY"
+
+# 프롬프트 템플릿 정의
+template = """생애사적 자서전을 작성할 때 다음 내용으로 쓸만한 다른 주제의 질문 3개를 해주세요:
+
+{input}
+
+질문:
+1.
+2.
+3.
+"""
+
+prompt = PromptTemplate(input_variables=["input"], template=template)
+
+# LLMChain 설정
+llm = OpenAI(temperature=0.7)
+memory = ConversationBufferMemory(input_key="input", memory_key="chat_history")
+chain = LLMChain(llm=llm, prompt=prompt, memory=memory)
+
+# FastAPI 애플리케이션 초기화
+app = FastAPI()
+
+class InputModel(BaseModel):
+    input: str
+
+@app.post("/generate-questions/")
+async def generate_questions(input: InputModel):
+    response = chain.run(input=input.input)
+    return {"questions": response}
+
+@app.get("/history/")
+async def get_history():
+    return {"chat_history": memory.chat_memory.messages}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
