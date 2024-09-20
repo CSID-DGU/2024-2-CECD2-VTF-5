@@ -34,13 +34,16 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   TextEditingController messageTextController = TextEditingController();
 
-
   static const String _kStrings = "chat bot";
   String get _currentString => _kStrings;
+
+  ScrollController scrollController = ScrollController();
 
   @override
   void dispose() {
     messageTextController.dispose();
+    scrollController.dispose();
+
 
     super.dispose();
   }
@@ -68,11 +71,45 @@ class _MyHomePageState extends State<MyHomePage> {
                       )),
                       PopupMenuItem(
                           child: ListTile(
-                            title: const Text("새 채팅"),
-                          ))
+                        title: const Text("새 채팅"),
+                      ))
                     ];
                   }),
                 ),
+              ),
+              Expanded(
+                  child: Container(
+                // color: Colors.blue,
+                // child: Center(
+                //   child: Text(_kStrings),
+                // ),
+                  child: ListView.builder(
+                      itemCount: 10,
+                      itemBuilder: (context, index){
+                    return Container();
+                  }),
+              )),
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(32),
+                        border: Border.all()
+                      ),
+                      child: TextField(
+                        controller: messageTextController,
+                        decoration: InputDecoration(
+                            border: InputBorder.none, hintText: "Message"),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    iconSize: 42,
+                      onPressed: () {},
+                      icon: Icon(Icons.arrow_circle_up))
+                ],
               )
             ],
           ),
