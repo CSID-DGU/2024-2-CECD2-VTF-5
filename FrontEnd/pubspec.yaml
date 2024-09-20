@@ -80,7 +80,7 @@ flutter:
   fonts:
     - family: main
       fonts:
-        - asset: assets/fonts/NaNumMiNi.ttf
+        - asset: assets/fonts/NanumMiNiSonGeurSsi.ttf
   #       - asset: fonts/Schyler-Italic.ttf
   #         style: italic
   #   - family: Trajan Pro
