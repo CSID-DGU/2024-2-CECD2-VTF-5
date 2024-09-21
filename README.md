@@ -4,6 +4,13 @@
 ## ⭐ 주제
 AI 구술 자서전 서비스
 
+## 📚 목차
+- [프로젝트 설명](#-프로젝트-설명)
+- [팀원 소개](#-팀원-소개)
+- [기술 스택](#-기술-스택)
+
+## 📝 프로젝트 설명
+AI 구술 자서전 서비스는 고령자를 대상으로 음성 인식 기술을 활용해 편리하게 자서전을 작성할 수 있는 서비스입니다. 이 서비스는 음성을 텍스트로 변환(STT)하고, 대화형 AI를 통해 질문에 답하며 자서전 내용을 풍부하게 만들 수 있습니다.
 
 ## 🧑‍💻 팀원 소개
 <table>
@@ -22,7 +29,7 @@ AI 구술 자서전 서비스
 ## 🔨 기술 스택
 ### 💻 Environment
 ![Visual Studio Code](https://img.shields.io/badge/Visual%20Studio%20Code-0078d7.svg?style=for-the-badge&logo=visual-studio-code&logoColor=white)
-![IntelliJ IDEA](https://img.shields.io/badge/IntelliJIDEA-000000.svg?style=for-the-badge&logo=intellij-idea&logoColor=white)
+![PyCharm](https://img.shields.io/badge/pycharm-143?style=for-the-badge&logo=pycharm&logoColor=black&color=green&labelColor=green)
 <img src="https://img.shields.io/badge/git-F05032?style=for-the-badge&logo=git&logoColor=white">
 <img src="https://img.shields.io/badge/github-181717?style=for-the-badge&logo=github&logoColor=white">
 
@@ -32,5 +39,11 @@ AI 구술 자서전 서비스
 
 
 ### 🌙 Back-end
-![Spring](https://img.shields.io/badge/spring-%236DB33F.svg?style=for-the-badge&logo=spring&logoColor=white) <img src="https://img.shields.io/badge/springboot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white"> ![AWS](https://img.shields.io/badge/AWS-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white)
+![Python](https://img.shields.io/badge/python-%2314354C.svg?style=for-the-badge&logo=python&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/postgresql-%23336791.svg?style=for-the-badge&logo=postgresql&logoColor=white)
+![AWS](https://img.shields.io/badge/AWS-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white)
+
+### 🤖 AI/ML & Prompt Engineering
+![LangChain](https://img.shields.io/badge/langchain-%230072B1.svg?style=for-the-badge&logo=LangChain&logoColor=white)
+![Prompt Engineering](https://img.shields.io/badge/Prompt_Engineering-%23FF5733.svg?style=for-the-badge)
 
