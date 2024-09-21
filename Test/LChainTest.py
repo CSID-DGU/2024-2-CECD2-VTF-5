@@ -58,7 +58,6 @@ def initialize_db():
                            content TEXT)''')
         conn.commit()
 
-
 initialize_db()  # 서버 시작 시 데이터베이스 초기화
 
 # 프롬프트 템플릿 정의
