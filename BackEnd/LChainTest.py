@@ -167,7 +167,6 @@ async def naverSTT(recordFile: UploadFile = File(...)):
     return generate_question(response.text) # 최종 질문 반환
 
 
-
 """ STT 결과값 가지고 input에 넣기 """
 def generate_question(input_text: str) -> str:
     """
