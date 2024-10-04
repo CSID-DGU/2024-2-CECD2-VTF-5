@@ -1,17 +1,20 @@
 import os
 import sqlite3
-from fastapi import FastAPI, HTTPException, Request, Form
 from pydantic import BaseModel
 import openai
+import requests
+
+from openai import OpenAIError  # OpenAI 예외 처리 클래스
+
 from langchain.prompts import PromptTemplate
+
 from dotenv import load_dotenv
 from typing import List
+from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
-
-# OpenAI 예외 처리 클래스
-from openai import OpenAIError
 
 # 환경 변수 로드
 load_dotenv()
@@ -33,6 +36,8 @@ templates = Jinja2Templates(directory="templates")
 
 # OpenAI API 키를 환경 변수에서 가져오기
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+client_id = os.getenv("YOUR_CLIENT_ID")
+client_secret = os.getenv("YOUR_CLIENT_SECRET")
 
 if not OPENAI_API_KEY:
     raise ValueError("OpenAI API Key is not set. Please set it in the .env file.")
@@ -128,12 +133,48 @@ def add_to_chat_history(conn, role: str, content: str):
         raise HTTPException(status_code=500, detail=f"Database insert error: {str(e)}")
 
 
-def generate_question_from_input(input_text: str) -> str:
+# 루트 경로 엔드포인트 정의 (HTML 페이지 렌더링)
+@app.get("/", response_class=HTMLResponse)
+async def read_root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
+
+""" Naver STT 라이브러리 """
+@app.post("/upload")
+async def naverSTT(recordFile: UploadFile = File(...)):
+    # 음성 파일을 Naver STT API로 보내기
+    url = "https://naveropenapi.apigw.ntruss.com/recog/v1/stt?lang=Kor"
+
+    # 파일을 비동기로 읽어서 Naver STT API에 전송
+    data = await recordFile.read()
+
+    # headers는 바꾸면 안됨.
+    headers = {
+        "X-NCP-APIGW-API-KEY-ID": client_id,
+        "X-NCP-APIGW-API-KEY": client_secret,
+        "Content-Type": "application/octet-stream"
+    }
+
+    response = requests.post(url, data=data, headers=headers)
+    rescode = response.status_code
+
+
+    if (rescode == 200):
+        print("STT 결과 : ", response.text)
+    else:
+        print("Error : " + response.text)
+
+    return generate_question(response.text) # 최종 질문 반환
+
+
+""" STT 결과값 가지고 input에 넣기 """
+def generate_question(input_text: str) -> str:
     """
     사용자의 입력 텍스트를 바탕으로 새로운 질문을 생성
     """
+
     try:
-        print(f"Input for OpenAI API: {input_text}")  # 디버깅 로그 추가
+        print(f"\n사용자의 입력값 : {input_text}")  # 디버깅 로그 추가
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
@@ -143,7 +184,7 @@ def generate_question_from_input(input_text: str) -> str:
             max_tokens=150,
             temperature=0.7
         )
-        print("OpenAI API Response:", response)  # 디버깅 로그 추가
+        print("\n질문 생성 결과 : ", response['choices'][0]['message']['content'].strip())  # 디버깅 로그 추가
         return response['choices'][0]['message']['content'].strip()
     except OpenAIError as e:
         print(f"OpenAI API Error: {str(e)}")  # OpenAI API 관련 에러 메시지 출력
@@ -151,68 +192,7 @@ def generate_question_from_input(input_text: str) -> str:
     except Exception as e:
         print(f"General error in generating question from input: {str(e)}")  # 일반적인 오류 출력
         raise HTTPException(status_code=500, detail="질문 생성 중 오류가 발생했습니다.")
-
-
-def generate_question_from_chat(chat_history: List[tuple], last_answer: str) -> str:
-    """
-    채팅 기록과 마지막 답변을 바탕으로 새로운 질문을 생성
-    """
-    # 채팅 기록을 문자열로 변환
-    chat_history_text = "\n".join([f"{role}: {content}" for role, content in chat_history])
-    try:
-        response = openai.Completion.create(
-            model="text-davinci-003",
-            prompt=chat_prompt.format(chat_history=chat_history_text, last_answer=last_answer),
-            max_tokens=150,
-            temperature=0.7
-        )
-        return response.choices[0].text.strip()
-    except OpenAIError as e:
-        print(f"OpenAI API Error: {str(e)}")  # 디버깅 로그 추가
-        raise HTTPException(status_code=500, detail=f"OpenAI API error: {str(e)}")
-    except Exception as e:
-        print(f"General error in generating question from chat: {str(e)}")  # 일반적인 오류 출력
-        raise HTTPException(status_code=500, detail="질문 생성 중 오류가 발생했습니다.")
-
-
-# 루트 경로 엔드포인트 정의 (HTML 페이지 렌더링)
-@app.get("/", response_class=HTMLResponse)
-async def read_root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
-
-
-@app.post("/generate_question")
-async def generate_next_question(answer: str = Form(...), use_chat_context: bool = Form(False)):
-    """
-    사용자의 입력 텍스트 또는 채팅 기록을 받아 새로운 질문을 생성
-    """
-    try:
-        with get_db_connection() as conn:
-            if use_chat_context:
-                # 채팅 기록을 바탕으로 질문 생성
-                chat_history = get_chat_history(conn)
-                print("Chat history loaded:", chat_history)  # 디버깅 로그 추가
-                question = generate_question_from_chat(chat_history, answer)
-            else:
-                # 입력 텍스트를 바탕으로 질문 생성
-                print("Generating question from input:", answer)  # 디버깅 로그 추가
-                question = generate_question_from_input(answer)
-
-            print("Generated question:", question)  # 디버깅 로그 추가
-
-            add_to_chat_history(conn, "assistant", question)
-            add_to_chat_history(conn, "user", answer)
-
-        return {"question": question}
-    except HTTPException as http_exc:
-        print(f"HTTP Exception: {http_exc.detail}")
-        raise http_exc  # 이미 처리된 HTTP 예외
-    except Exception as e:
-        # 일반적인 예외에 대한 로깅 추가
-        print(f"Error generating question: {e}")  # 디버깅 로그 추가
-        raise HTTPException(status_code=500, detail="질문 생성 중 오류가 발생했습니다.")
-
-
+#################################################################################
 @app.get("/chat_history", response_class=HTMLResponse)
 async def get_history(request: Request):
     """
