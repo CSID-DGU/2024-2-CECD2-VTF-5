@@ -31,6 +31,12 @@ migrate_working_dir/
 .pub/
 /build/
 
+# iOS/Xcode related 
+ios/Flutter/Debug.xcconfig
+ios/Flutter/Release.xcconfig
+ios/Runner.xcodeproj/
+ios/Runner.xcworkspace/
+
 # Symbolication related
 app.*.symbols
 
