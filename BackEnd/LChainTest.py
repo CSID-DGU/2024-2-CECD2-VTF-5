@@ -140,8 +140,8 @@ async def read_root(request: Request):
 
 
 """ Naver STT 라이브러리 """
-@app.post("/upload")
-async def naverSTT(recordFile: UploadFile = File(...)):
+@app.post("/generate_question")
+async def generateQuestionByNaverSTT(recordFile: UploadFile = File(...)):
     # 음성 파일을 Naver STT API로 보내기
     url = "https://naveropenapi.apigw.ntruss.com/recog/v1/stt?lang=Kor"
 
