@@ -1,8 +1,11 @@
 import os
-import sqlite3
+#import sqlite3
 from pydantic import BaseModel
 import openai
 import requests
+
+from sqlalchemy.orm import Session
+from . import database, models, auth, crud, schemas   # database.py에서 PostgreSQL 설정을 가져옵니다.
 
 from openai import OpenAIError  # OpenAI 예외 처리 클래스
 
@@ -15,6 +18,11 @@ from fastapi import Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from passlib.context import CryptContext
+from datetime import datetime, timedelta
+import jwt
+from typing import Optional
 
 # 환경 변수 로드
 load_dotenv()
@@ -216,3 +224,104 @@ async def clear_chat_history():
         return {"message": "Chat history cleared."}
     except sqlite3.Error as e:
         raise HTTPException(status_code=500, detail=f"Database deletion error: {str(e)}")
+    
+
+# PostgreSQL 데이터베이스 연결 설정
+@app.on_event("startup")
+def on_startup():
+    models.Base.metadata.create_all(bind=database.engine)
+
+# 의존성 주입을 위한 DB 세션 함수
+def get_db():
+    db = database.SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+# 비밀번호 해싱을 위한 설정
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# JWT 설정
+SECRET_KEY = os.getenv("SECRET_KEY", "your_secret_key")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+# 비밀번호 해싱 함수
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
+
+# 비밀번호 검증 함수
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
+
+# JWT 토큰 생성 함수
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+# JWT 토큰 디코딩 함수
+def decode_access_token(token: str):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+
+@app.post("/signup", response_model=schemas.User)
+def signup(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    db_user = db.query(models.User).filter(models.User.아이디 == user.아이디).first()
+    if db_user:
+        raise HTTPException(status_code=400, detail="아이디가 이미 존재합니다.")
+    
+    hashed_password = get_password_hash(user.비밀번호)
+    new_user = models.User(
+        이름=user.이름,
+        아이디=user.아이디,
+        비밀번호=hashed_password,
+        이메일=user.이메일,
+        생년월일=user.생년월일,
+        성별_남성여부=user.성별_남성여부,
+        결혼여부=user.결혼여부,
+        자녀유무=user.자녀유무
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
+
+# 로그인 엔드포인트 (JWT 토큰 발급)
+@app.post("/token", response_model=schemas.Token)
+def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.아이디 == form_data.username).first()
+    
+    if not user or not verify_password(form_data.password, user.비밀번호):
+        raise HTTPException(status_code=401, detail="아이디 또는 비밀번호가 잘못되었습니다.")
+    
+    access_token = create_access_token(data={"sub": user.아이디})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+# 로그인된 유저 정보 확인
+@app.get("/users/me", response_model=schemas.User)
+def read_users_me(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    payload = decode_access_token(token)
+    user_id = payload.get("sub")
+    if user_id is None:
+        raise HTTPException(status_code=401, detail="토큰이 유효하지 않습니다.")
+    
+    user = db.query(models.User).filter(models.User.아이디 == user_id).first()
+    if user is None:
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+    
+    return user
