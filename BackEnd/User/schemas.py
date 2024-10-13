@@ -7,9 +7,13 @@ class UserBase(BaseModel):
     아이디: str  # member_id
     이메일: Optional[str] = None  # email (Optional로 None 허용)
 
-# User 생성 시 필요한 스키마 (비밀번호 추가)
+# User 생성 시 필요한 스키마 (비밀번호 추가, 선택적 필드 포함)
 class UserCreate(UserBase):
     비밀번호: str  # password
+    생년월일: Optional[str] = "2000-01-01"  # birth (기본값 추가)
+    성별_남성여부: Optional[bool] = True  # is_male (기본값 추가)
+    결혼여부: Optional[bool] = False  # is_married (기본값 추가)
+    자녀유무: Optional[bool] = False  # has_child (기본값 추가)
 
 # 전체 User 정보를 나타내는 스키마 (id와 같은 추가 정보 포함)
 class User(UserBase):
@@ -28,3 +32,8 @@ class UserList(BaseModel):
 
     class Config:
         orm_mode = True
+
+# Token 스키마
+class Token(BaseModel):
+    access_token: str
+    token_type: str

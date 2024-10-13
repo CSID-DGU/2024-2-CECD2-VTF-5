@@ -1,16 +1,21 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+import os
 
-# 데이터베이스 URL 설정 (PostgreSQL 예시)
-SQLALCHEMY_DATABASE_URL = "postgresql://{username}:{password}@localhost:5432/{dbname}"
+# PostgreSQL 데이터베이스 URL
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+# SQLAlchemy 엔진 설정
+engine = create_engine(DATABASE_URL)
+
+# 세션 설정
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+# 베이스 클래스 설정
 Base = declarative_base()
 
-# Dependency - 요청 시마다 새로운 DB 세션을 생성하고, 완료되면 자동으로 세션을 종료
+# 데이터베이스 세션을 제공하는 의존성 함수
 def get_db():
     db = SessionLocal()
     try:
