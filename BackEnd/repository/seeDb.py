@@ -1,7 +1,7 @@
 import sqlite3
 
 # 데이터베이스 연결
-conn = sqlite3.connect('../ut/Test/test.db')
+conn = sqlite3.connect('../../../test.db')
 
 # 커서 생성
 cursor = conn.cursor()
