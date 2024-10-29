@@ -1,6 +1,7 @@
 import os
 import sys
 import sqlite3
+
 from langchain.prompts import PromptTemplate
 from pydantic import BaseModel
 import openai
@@ -66,7 +67,7 @@ client_secret = os.getenv("YOUR_CLIENT_SECRET")
 openai.api_key = OPENAI_API_KEY
 
 # OpenAI 클라이언트 초기화
-# client = OpenAI(api_key=os.getenv("OPENAI_API_KEY")) -> 오류안나면 확인 후 지우기
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 if not OPENAI_API_KEY:
     raise ValueError("OpenAI API 키가 없습니다  .env 파일을 다시 살펴보세요")
@@ -172,11 +173,11 @@ def generate_question(input_text: str) -> str:
     """
     try:
         print(f"\n사용자의 입력값 : {input_text}")  # 디버깅 로그 추가
-        # response = client.chat.completions.create(
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+        response = client.chat.completions.create(
+        # response = openai.ChatCompletion.create(
+            model="gpt-4o-mini",
             messages=[{
-                "role": "member",
+                "role": "user", # 프레임워크가 지정해놓은 role 이름이 user인 것임. 우리 사용자인 member를 의미하는 게 아님.
                 "content": f"당신은 AI Assistant입니다. 사용자가 입력한 텍스트에 대한 질문을 생성해야 합니다.\n\n입력 텍스트:\n{input_text}"
             }],
             max_tokens=150,
