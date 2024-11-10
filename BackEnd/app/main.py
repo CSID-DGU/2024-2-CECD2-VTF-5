@@ -116,7 +116,7 @@ input_prompt_template = """
 입력 텍스트:
 {input_text}
 
-위의 텍스트를 바탕으로, 다음과 같은 주제로 2개의 질문을 생성하세요:
+위의 텍스트를 바탕으로, 다음과 같은 주제로 3개의 질문을 생성하세요:
 - 중요한 기억이나 사건
 - 가족과의 추억
 - 인생의 교훈과 가치
@@ -135,7 +135,7 @@ chat_prompt_template = """
 
 사용자의 마지막 답변: {last_answer}
 
-위의 정보를 바탕으로, 노인이 자신의 이야기를 더 깊이 생각하고 이야기할 수 있는 다음 질문을 2개 생성하세요. 질문은 친절하고 따뜻한 어조로 작성되어야 하며, 다음 주제를 다룰 수 있습니다:
+위의 정보를 바탕으로, 노인이 자신의 이야기를 더 깊이 생각하고 이야기할 수 있는 다음 질문을 3개 생성하세요. 질문은 친절하고 따뜻한 어조로 작성되어야 하며, 다음 주제를 다룰 수 있습니다:
 - 인생의 중요한 사건
 - 어린 시절의 기억
 - 가족, 친구와의 추억
@@ -201,7 +201,7 @@ async def generate_question_by_naver_stt(recordFile: UploadFile = File(...)):
 """ STT 결과값 가지고 input에 넣기 """
 def generate_question(user_input: str) -> dict:
     """
-    사용자의 입력 텍스트를 바탕으로 자서전 작성에 필요한 질문을 생성하고, 두 개의 선택지로 반환
+    사용자의 입력 텍스트를 바탕으로 자서전 작성에 필요한 질문을 생성하고, 세 개의 선택지로 반환
     """
     try:
         print(f"\n사용자의 입력값: {user_input}")  # 디버깅 로그 추가
@@ -222,23 +222,23 @@ def generate_question(user_input: str) -> dict:
         else:
             raise ValueError("응답이 예상한 문자열 형식이 아닙니다.")
 
-        # 응답을 줄 바꿈으로 분할하고 상위 2개의 질문만 추출
+        # 응답을 줄 바꿈으로 분할하고 상위 3개의 질문만 추출
         questions = response_text.strip().split("\n")
         questions = [q.strip() for q in questions if q.strip()]  # 빈 줄 제거
-        questions = questions[:2]  # 최대 2개만 선택
+        questions = questions[:3]  # 최대 3개만 선택
 
-        # questions[0]이 질문1번, questions[1]이 질문2번임.
-        print("질문1번:", questions[0])
-        print("질문2번:", questions[1])
+        # 질문 출력
+        for i, question in enumerate(questions):
+            print(f"질문", question)
 
-        # 메모리 업데이트 (사용자 답변만 저장) -> 추후 저장공간 문제 우려
-        memory.save_context({"input": user_input}, {"output": ""}) # AI 응답은 저장하지 않음. output은 일단 넘겨주긴 해야함. 빈 상태로 넘김.
+        # 메모리 업데이트 (사용자 답변만 저장)
+        memory.save_context({"input": user_input}, {"output": ""})  # AI 응답은 저장하지 않음.
 
         # 현재 메모리 상태 출력 (요약된 내용 확인)
         print("현재 메모리 요약:", memory_summary)
 
-        # 두 개의 질문을 JSON 형식으로 반환. 쓰기 편하라고(?) 딕셔너리로 넘김
-        return {"question1": questions[0], "question2": questions[1]}
+        # 세 개의 질문을 JSON 형식으로 반환
+        return {"question1": questions[0], "question2": questions[1], "question3": questions[2]}
 
     except ValueError as e:
         print(f"Validation Error: {str(e)}")
