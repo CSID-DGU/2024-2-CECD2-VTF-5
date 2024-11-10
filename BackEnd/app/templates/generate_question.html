@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>질문 생성기</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background-color: white;
+        }
+        input[type="file"] {
+            margin-bottom: 15px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background-color: #f0f0f0;
+        }
+        #loading {
+            display: none;
+            font-size: 18px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>질문 생성기</h1>
+    <form id="upload-form" enctype="multipart/form-data">
+        <label for="audio-file">음성 파일 업로드:</label>
+        <input type="file" id="audio-file" name="recordFile" accept="audio/*" required>
+        <button type="submit">질문 생성하기</button>
+        <div id="loading">질문을 생성 중입니다... 잠시만 기다려주세요.</div>
+    </form>
+
+    <div id="result" class="result" style="display: none;">
+        <h2>생성된 질문</h2>
+        <div id="questions"></div>
+    </div>
+
+    <script>
+        document.getElementById('upload-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const fileInput = document.getElementById('audio-file');
+            const formData = new FormData();
+            formData.append('recordFile', fileInput.files[0]);
+
+            // 로딩 메시지 표시
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+
+            try {
+                const response = await fetch('/generate_question', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('질문 생성 중 오류가 발생했습니다.');
+                }
+
+                const result = await response.text();  // 서버에서 질문을 반환
+                document.getElementById('questions').innerText = result;
+                document.getElementById('result').style.display = 'block';
+            } catch (error) {
+                alert(error.message);
+                console.error('Error:', error);
+            } finally {
+                // 로딩 메시지 숨기기
+                document.getElementById('loading').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
