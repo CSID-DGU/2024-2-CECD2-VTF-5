@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로그인</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        input[type="text"], input[type="password"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>로그인</h1>
+        <form id="login-form">
+            <label for="login_id">아이디:</label>
+            <input type="text" id="login_id" name="login_id" required>
+
+            <label for="password">비밀번호:</label>
+            <input type="password" id="password" name="password" required>
+
+            <button type="submit">로그인</button>
+        </form>
+
+        <script>
+        document.getElementById('login-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const login_id = document.getElementById('login_id').value;
+            const password = document.getElementById('password').value;
+
+            fetch('/signIn', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    login_id: login_id,
+                    password: password
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.access_token) {
+                    alert(`로그인 성공! 이름: ${data.name}, 아이디: ${data.id}`);
+                } else {
+                    alert('로그인 실패: ' + (data.detail || '알 수 없는 오류'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("로그인 중 오류가 발생했습니다.");
+            });
+        });
+        </script>
+</body>
+</html>
