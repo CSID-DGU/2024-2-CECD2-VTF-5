@@ -239,9 +239,9 @@ def generate_question(stt_input: str) -> tuple:
 
         # 질문과 누적된 요약을 반환
         return {
-            "question1": questions[0] if len(questions) > 0 else "",
-            "question2": questions[1] if len(questions) > 1 else "",
-            "question3": questions[2] if len(questions) > 2 else ""
+            "question1": questions[0],
+            "question2": questions[1],
+            "question3": questions[2]
         }, updated_summary
 
     except ValueError as e:
@@ -325,7 +325,7 @@ def login_for_access_token(login_data: LoginRequest, db: Session = Depends(get_d
         "access_token": access_token,
         "token_type": "bearer",
         "name": present_member.name,  # 사용자 이름 반환
-        "id": login_data.login_id
+        "login_id": login_data.login_id
     }
 
 ################################################################################

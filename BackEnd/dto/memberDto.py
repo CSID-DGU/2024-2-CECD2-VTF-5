@@ -41,4 +41,4 @@ class Token(BaseModel):
     access_token: str
     token_type: str
     name: str
-    id: str
+    login_id: str
