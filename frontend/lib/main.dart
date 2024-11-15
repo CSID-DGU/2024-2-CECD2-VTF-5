@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../screens/newPassword.dart';
+import '../screens/recorder.dart';
 
 
 void main() {
@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.red),
         useMaterial3: true,
       ),
-      home: NewPasswordWidget(),
+      home: HomePage(),
     );
   }
 }
