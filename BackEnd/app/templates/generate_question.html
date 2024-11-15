@@ -92,8 +92,15 @@
                     throw new Error('질문 생성 중 오류가 발생했습니다.');
                 }
 
-                const result = await response.text();  // 서버에서 질문을 반환
-                document.getElementById('questions').innerText = result;
+                // 서버에서 JSON 응답 받기
+                const result = await response.json();
+
+                // 질문 표시
+                document.getElementById('questions').innerHTML = `
+                    <p>질문 1: ${result.question1}</p>
+                    <p>질문 2: ${result.question2}</p>
+                    <p>질문 3: ${result.question3}</p>
+                `;
                 document.getElementById('result').style.display = 'block';
             } catch (error) {
                 alert(error.message);
