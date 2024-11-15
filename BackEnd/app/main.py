@@ -24,6 +24,9 @@ from datetime import datetime, timedelta
 # SQL 관련
 from sqlalchemy.orm import Session
 
+from pydantic import BaseModel
+
+
 from ..config.test_database import SessionLocal
 from ..dto.memberDto import LoginRequest
 from ..entity import member
@@ -150,12 +153,46 @@ chat_prompt = PromptTemplate(input_variables=["chat_history", "last_answer"], te
 autobiography_prompt = PromptTemplate(input_variables=["name", "age", "responses"], template=autobiography_output_prompt)
 ################################################################################
 """ Naver STT 라이브러리 """
-@app.post("/generate_question")
-async def generate_question_by_naver_stt(
+@app.post("/stt")
+async def speech_to_text(
     recordFile: UploadFile = File(...),
+):
+    # 음성 파일을 Naver STT API로 보내기
+    url = "https://naveropenapi.apigw.ntruss.com/recog/v1/stt?lang=Kor"
+    data = await recordFile.read()
+    headers = {
+        "X-NCP-APIGW-API-KEY-ID": client_id,
+        "X-NCP-APIGW-API-KEY": client_secret,
+        "Content-Type": "application/octet-stream"
+    }
+    response = requests.post(url, data=data, headers=headers)
+    if response.status_code == 200:
+        print("STT 결과:", response.text)
+
+        # JSON 응답 파싱
+        try:
+            stt_result = json.loads(response.text)
+            stt_input = stt_result.get("text", "")
+        except json.JSONDecodeError:
+            stt_input = response.text  # JSON 파싱 실패 시 일반 텍스트로 사용
+
+        # 텍스트 반환
+        return {"text": stt_input}
+    else:
+        print("Error:", response.text)
+        raise HTTPException(status_code=500, detail="STT 변환 중 오류가 발생했습니다.")
+
+# 입력 모델 정의
+class GenerateQuestionInput(BaseModel):
+    stt_input: str
+
+@app.post("/generate_question")
+async def generate_question(
+    input_data: GenerateQuestionInput,  # 입력을 JSON Body로 받음
     db: Session = Depends(get_db),
     token: str = Depends(oauth2_scheme)
 ):
+    stt_input = input_data.stt_input  # JSON Body에서 텍스트 추출
     # 사용자 ID 추출
     try:
         token_data = decode_access_token(token)
@@ -167,44 +204,6 @@ async def generate_question_by_naver_stt(
         print(f"토큰 오류: {str(e)}")
         raise e
 
-    # 음성 파일을 Naver STT API로 보내기
-    url = "https://naveropenapi.apigw.ntruss.com/recog/v1/stt?lang=Kor"
-    data = await recordFile.read()
-    headers = {
-        "X-NCP-APIGW-API-KEY-ID": client_id,
-        "X-NCP-APIGW-API-KEY": client_secret,
-        "Content-Type": "application/octet-stream"
-    }
-    response = requests.post(url, data=data, headers=headers)
-    rescode = response.status_code
-    if rescode == 200:
-        print("STT 결과:", response.text)
-
-        # JSON 응답 파싱
-        try:
-            stt_result = json.loads(response.text)
-            stt_input = stt_result.get("text", "")
-        except json.JSONDecodeError:
-            stt_input = response.text  # JSON 파싱 실패 시 일반 텍스트로 사용
-
-        # (1) 질문 생성 함수 호출 및 질문 생성
-        questions, summary_text = generate_question(stt_input)  # summary_text 반환 추가
-
-        # (2) 사용자 summary 필드 업데이트
-        update_user_summary(db, user_id, summary_text)
-
-        # 최종 질문 반환
-        return questions
-    else:
-        print("Error:", response.text)
-        raise HTTPException(status_code=500, detail="STT 변환 중 오류가 발생했습니다.")
-
-
-def generate_question(stt_input: str) -> tuple:
-    """
-    사용자의 입력 텍스트(stt_input)를 바탕으로 자서전 작성에 필요한 질문을 생성하고,
-    기존 요약에 누적된 형태로 새로운 질문을 반환.
-    """
     try:
         print(f"\n사용자의 입력값: {stt_input}")
 
@@ -234,16 +233,17 @@ def generate_question(stt_input: str) -> tuple:
         for i, question in enumerate(questions):
             print(f"질문 {i+1}: {question}")
 
-        # 4. 사용자 답변이 포함된 요약을 메모리에 저장하여 누적 유지g
+        # 4. 사용자 답변이 포함된 요약을 메모리에 저장하여 누적 유지
         memory.save_context({"input": stt_input}, {"output": updated_summary})
 
-        # 질문과 누적된 요약을 반환
-        return {
-            "question1": questions[0],
-            "question2": questions[1],
-            "question3": questions[2]
-        }, updated_summary
+        # 사용자 summary 필드 업데이트
+        update_user_summary(db, user_id, updated_summary)
 
+        # 질문과 누적된 요약 반환
+        return {
+            "questions": questions,
+            "summary": updated_summary
+        }
     except ValueError as e:
         print(f"Validation Error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Validation error: {str(e)}")
