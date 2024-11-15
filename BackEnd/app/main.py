@@ -1,60 +1,59 @@
-import asyncio
-import json
-import sqlite3
-import os
-import requests
-import openai
-from langchain.prompts import PromptTemplate
-from pydantic import BaseModel
-
-from sqlalchemy.orm import Session
-from openai import OpenAIError
+import asyncio, json, sqlite3, os, requests
 from dotenv import load_dotenv
-from typing import List, Optional
-from fastapi import FastAPI, File, UploadFile, HTTPException, Depends
-from fastapi import Request
+
+# JWT 관련
+import jwt as pyjwt  # pyjwt 패키지를 사용하고 있음. jwt말고, pyjwt 써야함. 충돌 가능해서
+
+from openai import OpenAIError
+from typing import Optional
 
 # 랭체인 관련
-from langchain.chains import ConversationChain # 이거 쓰지 말기 deprecated됨
-from langchain.memory import ConversationSummaryBufferMemory
 from langchain.memory import ConversationSummaryMemory
-
 from langchain_openai import ChatOpenAI
-from langchain_core.runnables.history import RunnableWithMessageHistory
-from langchain_core.chat_history import InMemoryChatMessageHistory
+from langchain.prompts import PromptTemplate
 
+# FastAPI 관련
+from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, status, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
-import jwt as pyjwt  # pyjwt 패키지를 사용하고 있음
 
-from ..config.test_database import engine, SessionLocal  # engine과 SessionLocal만 임포트
+# SQL 관련
+from sqlalchemy.orm import Session
+
+from ..config.test_database import SessionLocal
 from ..dto.memberDto import LoginRequest
-
 from ..entity import member
 from ..dto import memberDto
-from BackEnd.entity.base import Base  # Base는 모든 엔티티가 상속하는 기본 클래스
 
 
 # 환경 변수 로드
-# load_dotenv()
 dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
 load_dotenv(dotenv_path=dotenv_path)
 
-# @asynccontextmanager
-# async def lifespan(app: FastAPI):
-#     # 애플리케이션 시작 시 실행할 코드
-#     member.Base.metadata.create_all(bind=engine)  # DB 테이블 생성
-#     yield
+# OpenAI API 키를 환경 변수에서 가져오기
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+# Naver STT 시크릿키
+client_id = os.getenv("YOUR_CLIENT_ID")
+client_secret = os.getenv("YOUR_CLIENT_SECRET")
+
+# JWT 설정
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+
+# 비밀번호 해싱을 위한 설정
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # 최상위 2024~~에서 uvicorn BackEnd.app.main:app --reload
-# app = FastAPI(lifespan=lifespan) # 오류나면 이거로 트라이
 app = FastAPI()
-# templates = Jinja2Templates(directory="BackEnd/app/templates")
 templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
+client = ChatOpenAI(api_key=OPENAI_API_KEY) # OpenAI 클라이언트 초기화
 
 # CORS 설정 추가
 app.add_middleware(
@@ -65,17 +64,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-# OpenAI API 키를 환경 변수에서 가져오기
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-client_id = os.getenv("YOUR_CLIENT_ID")
-client_secret = os.getenv("YOUR_CLIENT_SECRET")
-openai.api_key = OPENAI_API_KEY # 리펙토링할 때 정리하기
-
-# OpenAI 클라이언트 초기화
-# client = OpenAI(api_key=os.getenv("OPENAI_API_KEY")) # csbm 쓰기 전임.
-client = ChatOpenAI(api_key=OPENAI_API_KEY)
-
 # 요약 기반 메모리 생성 (200 토큰 제한)
 memory = ConversationSummaryMemory(
     llm=client,
@@ -83,48 +71,38 @@ memory = ConversationSummaryMemory(
     return_messages=True,
 )
 
-if not OPENAI_API_KEY:
-    raise ValueError("OpenAI API 키가 없습니다  .env 파일을 다시 살펴보세요")
-
-
-# SQLite 데이터베이스 연결 설정
-def get_db_connection():
+# 의존성 주입을 위한 DB 세션 함수
+def get_db():
+    db = SessionLocal()
     try:
-        conn = sqlite3.connect('../chat_history.db', check_same_thread=False)
-        return conn
-    except sqlite3.Error as e:
-        raise HTTPException(status_code=500, detail=f"Database connection error: {str(e)}")
+        yield db
+    finally:
+        db.close()
 
+# JWT : 비밀번호 해싱 함수
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
 
-# 채팅 기록을 저장할 테이블 생성
-def initialize_db():
-    with get_db_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute('''CREATE TABLE IF NOT EXISTS chat_history
-                          (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                           role TEXT,
-                           content TEXT)''')
-        conn.commit()
+# JWT : 비밀번호 검증 함수
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
 
+# JWT : 토큰 생성하기
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + (expires_delta if expires_delta else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    to_encode.update({"exp": expire})
+    return pyjwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-initialize_db()  # 서버 시작 시 데이터베이스 초기화
-
-# 프롬프트 템플릿 정의
-input_prompt_template = """
-당신은 자서전 작성을 돕는 AI Assistant입니다. 노인의 삶의 기억을 되살리고, 중요한 순간들을 기록할 수 있도록 돕는 질문을 생성해야 합니다.
-
-입력 텍스트:
-{input_text}
-
-위의 텍스트를 바탕으로, 다음과 같은 주제로 3개의 질문을 생성하세요:
-- 중요한 기억이나 사건
-- 가족과의 추억
-- 인생의 교훈과 가치
-
-질문은 노인이 더 많은 기억을 떠올릴 수 있도록 구체적이고 따뜻한 어조로 작성되어야 합니다.
-
-생성된 질문:
-"""
+# JWT : 토큰 디코드 하기
+def decode_access_token(token: str):
+    try:
+        payload = pyjwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except pyjwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except pyjwt.JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 
 chat_prompt_template = """
@@ -145,33 +123,50 @@ chat_prompt_template = """
 """
 
 
+autobiography_output_prompt = """
+당신은 자서전 작성을 돕는 AI Assistant입니다. 아래 데이터를 바탕으로 자서전 포맷에 맞게 내용을 구성하세요.
+
+사용자 정보:
+- 이름: {name}
+- 나이: {age}
+- 주요 대답 내용: {responses}
+
+출력 조건:
+1. 자서전은 아래 형식을 따라야 합니다:
+   - 제목: "나의 이야기, {name}"
+   - 소개: "저는 {name}입니다. {age}살이고, 제 삶의 이야기를 나누고자 합니다."
+   - 챕터 1 - 중요한 사건: 사용자 대답 중 인생의 중요한 사건을 기반으로 작성.
+   - 챕터 2 - 가족과의 추억: 사용자 대답 중 가족과 관련된 기억을 기반으로 작성.
+   - 챕터 3 - 인생의 교훈: 사용자 대답 중 느낀 점, 교훈, 가치를 기반으로 작성.
+
+2. 각 챕터는 따뜻하고 감동적인 어조로 작성하세요.
+3. 챕터 제목을 포함하여, 내용을 매끄럽게 연결하세요.  
+
+출력 결과:
+"""
+
 # PromptTemplate 객체 생성
-input_prompt = PromptTemplate(input_variables=["input_text"], template=input_prompt_template)
 chat_prompt = PromptTemplate(input_variables=["chat_history", "last_answer"], template=chat_prompt_template)
-
-
-# 데이터 모델 정의
-class member_input(BaseModel):
-    answer: str
-
-
-def add_to_chat_history(conn, role: str, content: str):
-    """
-    새로운 대화 내용을 DB에 추가
-    """
-    try:
-        cursor = conn.cursor()
-        cursor.execute("INSERT INTO chat_history (role, content) VALUES (?, ?)", (role, content))
-        conn.commit()
-    except sqlite3.Error as e:
-        raise HTTPException(status_code=500, detail=f"Database insert error: {str(e)}")
-
-
-
-
+autobiography_prompt = PromptTemplate(input_variables=["name", "age", "responses"], template=autobiography_output_prompt)
+################################################################################
 """ Naver STT 라이브러리 """
 @app.post("/generate_question")
-async def generate_question_by_naver_stt(recordFile: UploadFile = File(...)):
+async def generate_question_by_naver_stt(
+    recordFile: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    token: str = Depends(oauth2_scheme)
+):
+    # 사용자 ID 추출
+    try:
+        token_data = decode_access_token(token)
+        user_id = token_data.get("sub")
+
+        if not user_id:
+            raise HTTPException(status_code=401, detail="유효하지 않은 사용자 토큰입니다.")
+    except HTTPException as e:
+        print(f"토큰 오류: {str(e)}")
+        raise e
+
     # 음성 파일을 Naver STT API로 보내기
     url = "https://naveropenapi.apigw.ntruss.com/recog/v1/stt?lang=Kor"
     data = await recordFile.read()
@@ -185,60 +180,69 @@ async def generate_question_by_naver_stt(recordFile: UploadFile = File(...)):
     if rescode == 200:
         print("STT 결과:", response.text)
 
-        # JSON 응답인지 확인하고 파싱 (txt만 뽑기)
+        # JSON 응답 파싱
         try:
             stt_result = json.loads(response.text)
-            input_text = stt_result.get("text", "")
+            stt_input = stt_result.get("text", "")
         except json.JSONDecodeError:
-            input_text = response.text  # JSON 파싱 실패 시 일반 텍스트로 사용
+            stt_input = response.text  # JSON 파싱 실패 시 일반 텍스트로 사용
 
-        return generate_question(input_text)  # 최종 질문 반환
+        # (1) 질문 생성 함수 호출 및 질문 생성
+        questions, summary_text = generate_question(stt_input)  # summary_text 반환 추가
+
+        # (2) 사용자 summary 필드 업데이트
+        update_user_summary(db, user_id, summary_text)
+
+        # 최종 질문 반환
+        return questions
     else:
         print("Error:", response.text)
         raise HTTPException(status_code=500, detail="STT 변환 중 오류가 발생했습니다.")
 
 
-""" STT 결과값 가지고 input에 넣기 """
-def generate_question(user_input: str) -> dict:
+def generate_question(stt_input: str) -> tuple:
     """
-    사용자의 입력 텍스트를 바탕으로 자서전 작성에 필요한 질문을 생성하고, 세 개의 선택지로 반환
+    사용자의 입력 텍스트(stt_input)를 바탕으로 자서전 작성에 필요한 질문을 생성하고,
+    기존 요약에 누적된 형태로 새로운 질문을 반환.
     """
     try:
-        print(f"\n사용자의 입력값: {user_input}")  # 디버깅 로그 추가
+        print(f"\n사용자의 입력값: {stt_input}")
 
-        # 메모리 기반의 대화 기록 불러오기
+        # 1. 기존 요약 불러오기 (누적된 대화 맥락)
         memory_summary = memory.load_memory_variables({})
-        chat_history = memory_summary.get("history", "")
+        existing_summary = memory_summary.get("history", "")
 
-        # 자서전 작성용 프롬프트를 사용하여 질문 생성
-        prompt = chat_prompt.format(chat_history=chat_history, last_answer=user_input)
-        response = client.invoke(prompt)  # 자서전 프롬프트로 LLM 호출
+        # 2. 새로운 사용자 입력을 기존 요약에 누적하여 새로운 요약 업데이트
+        updated_summary = f"{existing_summary}\n사용자 답변: {stt_input}"
 
-        # 응답이 AIMessage 형식인 경우, content 속성 추출
+        # 3. 누적된 요약을 바탕으로 질문 생성
+        prompt = chat_prompt.format(chat_history=updated_summary, last_answer=stt_input)
+        response = client.invoke(prompt)
+
+        # 응답에서 질문을 추출
         if hasattr(response, 'content'):
             response_text = response.content
         elif isinstance(response, list) and len(response) > 0:
-            response_text = response[0].content  # 리스트일 경우 첫 번째 항목의 content 추출
+            response_text = response[0].content
         else:
-            raise ValueError("응답이 예상한 문자열 형식이 아닙니다.")
+            raise ValueError("응답 형식이 예상과 다릅니다.")
 
-        # 응답을 줄 바꿈으로 분할하고 상위 3개의 질문만 추출
+        # 응답을 줄바꿈 기준으로 3개 질문 추출
         questions = response_text.strip().split("\n")
-        questions = [q.strip() for q in questions if q.strip()]  # 빈 줄 제거
-        questions = questions[:3]  # 최대 3개만 선택
+        questions = [q.strip() for q in questions if q.strip()][:3]
 
-        # 질문 출력
         for i, question in enumerate(questions):
-            print(f"질문", question)
+            print(f"질문 {i+1}: {question}")
 
-        # 메모리 업데이트 (사용자 답변만 저장)
-        memory.save_context({"input": user_input}, {"output": ""})  # AI 응답은 저장하지 않음.
+        # 4. 사용자 답변이 포함된 요약을 메모리에 저장하여 누적 유지g
+        memory.save_context({"input": stt_input}, {"output": updated_summary})
 
-        # 현재 메모리 상태 출력 (요약된 내용 확인)
-        print("현재 메모리 요약:", memory_summary)
-
-        # 세 개의 질문을 JSON 형식으로 반환
-        return {"question1": questions[0], "question2": questions[1], "question3": questions[2]}
+        # 질문과 누적된 요약을 반환
+        return {
+            "question1": questions[0] if len(questions) > 0 else "",
+            "question2": questions[1] if len(questions) > 1 else "",
+            "question3": questions[2] if len(questions) > 2 else ""
+        }, updated_summary
 
     except ValueError as e:
         print(f"Validation Error: {str(e)}")
@@ -252,59 +256,28 @@ def generate_question(user_input: str) -> dict:
     except Exception as e:
         print(f"General error in generating question from input: {str(e)}")
         raise HTTPException(status_code=500, detail="질문 생성 중 오류가 발생했습니다.")
-#################################################################################
-
-# # PostgreSQL 또는 SQLite 데이터베이스 연결 설정
-# @app.on_event("startup")
-# def on_startup():
-#     User.Base.metadata.create_all(bind=engine)
-
-# 의존성 주입을 위한 DB 세션 함수
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
-# 비밀번호 해싱을 위한 설정
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+def update_user_summary(db: Session, user_id: str, summary_text: str):
+    """
+    사용자의 summary 필드를 요약본으로 업데이트합니다.
+    """
+    # summary_text를 문자열로 변환 (예: 리스트나 복잡한 객체가 아닌 문자열로만 저장 가능)
+    if isinstance(summary_text, list):
+        # 리스트 형식이라면, 각 항목을 문자열로 변환하고 합쳐서 저장
+        summary_text = "\n".join(str(item) for item in summary_text)
 
-# JWT 설정
-SECRET_KEY = os.getenv("SECRET_KEY", "your_secret_key")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="signIn")
+    user = db.query(member.Member).filter(member.Member.login_id == user_id).first()
+    if user:
+        user.summary = summary_text  # summary 필드에 업데이트된 텍스트 저장
+        db.commit()
+        print(f"사용자 {user_id}의 summary가 업데이트되었습니다.")
+    else:
+        print(f"사용자 {user_id}를 찾을 수 없습니다.")
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+################################################################################
 
-
-# 비밀번호 해싱 함수
-def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
-
-
-# 비밀번호 검증 함수
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
-
-
-# jwt말고, pyjwt 써야함. 충돌 가능해서
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
-    to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta if expires_delta else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-    to_encode.update({"exp": expire})
-    return pyjwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
-def decode_access_token(token: str):
-    try:
-        payload = pyjwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return payload
-    except pyjwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired")
-    except pyjwt.JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-
-# 회원가입 엔드포인트
+# 회원가입
 @app.post("/signup", response_model=memberDto.Member)
 def signup(member_data: memberDto.MemberCreate, db: Session = Depends(get_db)):
     db_member = db.query(member.Member).filter(member.Member.login_id == member_data.login_id).first()
@@ -328,14 +301,14 @@ def signup(member_data: memberDto.MemberCreate, db: Session = Depends(get_db)):
     return new_member
 
 
-# 로그인 엔드포인트 (JWT 토큰 발급)
-@app.post("/signIn", response_model=memberDto.Token)
+# 로그인 (JWT 토큰 발급)
+@app.post("/login", response_model=memberDto.Token)
 def login_for_access_token(login_data: LoginRequest, db: Session = Depends(get_db)):
     # 사용자 조회
     present_member = db.query(member.Member).filter(member.Member.login_id == login_data.login_id).first()
 
     # 디버깅 로그
-    print("Queried member:", present_member)
+    print("현재 사용자 : ", present_member)
 
     # 아이디 검증
     if not present_member:
@@ -352,15 +325,14 @@ def login_for_access_token(login_data: LoginRequest, db: Session = Depends(get_d
         "access_token": access_token,
         "token_type": "bearer",
         "name": present_member.name,  # 사용자 이름 반환
-        "id": present_member.login_id  # 사용자 ID 반환
+        "id": login_data.login_id
     }
 
-
+################################################################################
 # 루트 경로 엔드포인트 정의 (HTML 페이지 렌더링)
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
-
 
 @app.get("/signup", response_class=HTMLResponse)
 async def signup_page(request: Request):
