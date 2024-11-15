@@ -47,6 +47,16 @@ from BackEnd.config.test_database import get_db
 dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
 load_dotenv(dotenv_path=dotenv_path)
 
+# JWT 설정
+SECRET_KEY = os.getenv("SECRET_KEY", "your_secret_key")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+
+# 비밀번호 해싱을 위한 설정
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
 # @asynccontextmanager
 # async def lifespan(app: FastAPI):
 #     # 애플리케이션 시작 시 실행할 코드
@@ -86,10 +96,6 @@ memory = ConversationSummaryMemory(
     return_messages=True,
 )
 
-if not OPENAI_API_KEY:
-    raise ValueError("OpenAI API 키가 없습니다  .env 파일을 다시 살펴보세요")
-
-
 # SQLite 데이터베이스 연결 설정
 def get_db_connection():
     try:
@@ -99,8 +105,6 @@ def get_db_connection():
         raise HTTPException(status_code=500, detail=f"Database connection error: {str(e)}")
 
 
-
-
 # 의존성 주입을 위한 DB 세션 함수
 def get_db():
     db = SessionLocal()
@@ -108,15 +112,6 @@ def get_db():
         yield db
     finally:
         db.close()
-
-# 비밀번호 해싱을 위한 설정
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-# JWT 설정
-SECRET_KEY = os.getenv("SECRET_KEY", "your_secret_key")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 
 # 채팅 기록을 저장할 테이블 생성
@@ -137,11 +132,9 @@ initialize_db()  # 서버 시작 시 데이터베이스 초기화
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
-
 # 비밀번호 검증 함수
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
-
 
 # jwt말고, pyjwt 써야함. 충돌 가능해서
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
@@ -160,7 +153,6 @@ def decode_access_token(token: str):
         raise HTTPException(status_code=401, detail="Invalid token")
 
 
-
 # 프롬프트 템플릿 정의
 input_prompt_template = """
 당신은 자서전 작성을 돕는 AI Assistant입니다. 노인의 삶의 기억을 되살리고, 중요한 순간들을 기록할 수 있도록 돕는 질문을 생성해야 합니다.
@@ -177,7 +169,6 @@ input_prompt_template = """
 
 생성된 질문:
 """
-
 
 chat_prompt_template = """
 당신은 자서전 작성을 돕는 AI Assistant입니다. 지금까지의 대화 내용을 바탕으로 노인의 삶의 경험과 기억을 되살릴 수 있는 질문을 생성해야 합니다.
@@ -200,7 +191,6 @@ chat_prompt_template = """
 # PromptTemplate 객체 생성
 input_prompt = PromptTemplate(input_variables=["input_text"], template=input_prompt_template)
 chat_prompt = PromptTemplate(input_variables=["chat_history", "last_answer"], template=chat_prompt_template)
-
 
 
 """ Naver STT 라이브러리 """
@@ -237,12 +227,12 @@ async def generate_question_by_naver_stt(
         # JSON 응답 파싱
         try:
             stt_result = json.loads(response.text)
-            input_text = stt_result.get("text", "")
+            stt_input = stt_result.get("text", "")
         except json.JSONDecodeError:
-            input_text = response.text  # JSON 파싱 실패 시 일반 텍스트로 사용
+            stt_input = response.text  # JSON 파싱 실패 시 일반 텍스트로 사용
 
         # (1) 질문 생성 함수 호출 및 질문 생성
-        questions, summary_text = generate_question(input_text)  # summary_text 반환 추가
+        questions, summary_text = generate_question(stt_input)  # summary_text 반환 추가
 
         # (2) 사용자 summary 필드 업데이트
         update_user_summary(db, user_id, summary_text)
@@ -255,19 +245,19 @@ async def generate_question_by_naver_stt(
 
 
 """ STT 결과값 가지고 input에 넣기 """
-def generate_question(user_input: str) -> tuple:
+def generate_question(stt_input: str) -> tuple:
     """
     사용자의 입력 텍스트를 바탕으로 자서전 작성에 필요한 질문을 생성하고, 세 개의 선택지와 요약 텍스트를 반환
     """
     try:
-        print(f"\n사용자의 입력값: {user_input}")
+        print(f"\n사용자의 입력값: {stt_input}")
 
         # 메모리 기반의 대화 기록 불러오기
         memory_summary = memory.load_memory_variables({})
         chat_history = memory_summary.get("history", "")
 
         # 자서전 작성용 프롬프트로 질문 생성
-        prompt = chat_prompt.format(chat_history=chat_history, last_answer=user_input)
+        prompt = chat_prompt.format(chat_history=chat_history, last_answer=stt_input)
         response = client.invoke(prompt)
 
         # 응답에서 질문을 추출
@@ -286,7 +276,7 @@ def generate_question(user_input: str) -> tuple:
             print(f"질문 {i+1}: {question}")
 
         # 메모리에 사용자 입력을 통해 요약 갱신
-        memory.save_context({"input": user_input}, {"output": response_text})
+        memory.save_context({"input": stt_input}, {"output": response_text})
 
         # 요약을 위한 텍스트 추출
         summary_text = memory.load_memory_variables({}).get("history", "")
