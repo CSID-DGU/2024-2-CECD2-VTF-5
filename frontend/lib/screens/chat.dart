@@ -61,7 +61,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                         style: TextStyle(
                           fontFamily: 'nanum',
                           fontSize: 32,
-                          fontWeight: FontWeight.normal,
+                          fontWeight: FontWeight.normal
                         ),
                       ),
                     ),
