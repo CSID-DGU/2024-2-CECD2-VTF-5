@@ -125,7 +125,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                             child: Icon(
                               Icons.person_sharp,
                               color: Colors.black,
-                              size: 50,
+                              size: 50
                             ),
                           ),
                           Padding(

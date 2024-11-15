@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../model/login.dart';
 
 class LoginWidget extends StatefulWidget {
   const LoginWidget({super.key});
