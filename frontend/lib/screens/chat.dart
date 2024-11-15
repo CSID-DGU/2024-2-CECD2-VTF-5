@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/recording_service.dart';
 
 class ChatWidget extends StatefulWidget {
   const ChatWidget({Key? key}) : super(key: key);
@@ -9,6 +10,8 @@ class ChatWidget extends StatefulWidget {
 
 class _ChatWidgetState extends State<ChatWidget> {
   late ChatModel _model;
+  late RecordingService _recordingService;
+  bool isRecording = false;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -16,6 +19,7 @@ class _ChatWidgetState extends State<ChatWidget> {
   void initState() {
     super.initState();
     _model = ChatModel();
+    _recordingService = RecordingService();
   }
 
   @override
@@ -57,7 +61,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                     Padding(
                       padding: const EdgeInsets.only(left: 20),
                       child: Text(
-                        '질문 질문 질문 질문 질문',
+                        '그렇다면 작성자님은 어떤 이유로\n친구에게 소개팅을 주선했나요?',
                         style: TextStyle(
                           fontFamily: 'nanum',
                           fontSize: 32,
@@ -89,7 +93,8 @@ class _ChatWidgetState extends State<ChatWidget> {
                             child: Padding(
                               padding: const EdgeInsets.all(20),
                               child: Text(
-                                '답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!',
+                                '아이고, 그걸 이야기하자면 참 긴 얘기야. 우리 시절엔 요즘처럼 자유롭게 만남을 가질 수 있는 것도 아니었고, 사람을 만나고 싶다고 해도 쉽지 않았거든. 옛날 친구가 홀로 지낸 세월이 좀 오래됐는데, 나이가 들수록 혼자라는 게 더 외롭잖아. 아침에 일어나서 아무도 없는 집에 앉아있을 때의 그 쓸쓸함이란 나도 그 마음을 잘 알지. 그래서 나처럼 혼자인 친구가 편안하게 대화할 사람이라도 있으면 얼마나 좋을까 싶었어. 같이 시장에도 가고, 맛있는 음식도 나눠 먹으면서 웃을 수 있는',
+                                // '답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!',
                                 style: TextStyle(
                                   fontFamily: 'nanum',
                                   fontSize: 30,
@@ -103,9 +108,16 @@ class _ChatWidgetState extends State<ChatWidget> {
                   ),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(24),
-                    child: Image.asset('assets/images/Listening.png',
-                      width: 100,height: 100,
-                      fit: BoxFit.cover,
+                    child: GestureDetector(
+                      onTap: _toggleRecording,
+                      child: Image.asset(
+                        isRecording
+                        ? 'assets/images/Listening.png'
+                        : 'assets/images/Listening2.png',
+                        width: 100,
+                        height: 100,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                   Row(
@@ -163,6 +175,17 @@ class _ChatWidgetState extends State<ChatWidget> {
         ),
       ),
     );
+  }
+
+  Future<void> _toggleRecording() async {
+    if (_recordingService.isRecording) {
+      await _recordingService.stopRecording();
+    } else {
+      await _recordingService.startRecording();
+    }
+    setState(() {
+      isRecording = _recordingService.isRecording;
+    });
   }
 }
 
