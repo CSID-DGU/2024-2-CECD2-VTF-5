@@ -244,20 +244,23 @@ async def generate_question_by_naver_stt(
         raise HTTPException(status_code=500, detail="STT 변환 중 오류가 발생했습니다.")
 
 
-""" STT 결과값 가지고 input에 넣기 """
 def generate_question(stt_input: str) -> tuple:
     """
-    사용자의 입력 텍스트를 바탕으로 자서전 작성에 필요한 질문을 생성하고, 세 개의 선택지와 요약 텍스트를 반환
+    사용자의 입력 텍스트(stt_input)를 바탕으로 자서전 작성에 필요한 질문을 생성하고,
+    기존 요약에 누적된 형태로 새로운 질문을 반환.
     """
     try:
         print(f"\n사용자의 입력값: {stt_input}")
 
-        # 메모리 기반의 대화 기록 불러오기
+        # 1. 기존 요약 불러오기 (누적된 대화 맥락)
         memory_summary = memory.load_memory_variables({})
-        chat_history = memory_summary.get("history", "")
+        existing_summary = memory_summary.get("history", "")
 
-        # 자서전 작성용 프롬프트로 질문 생성
-        prompt = chat_prompt.format(chat_history=chat_history, last_answer=stt_input)
+        # 2. 새로운 사용자 입력을 기존 요약에 누적하여 새로운 요약 업데이트
+        updated_summary = f"{existing_summary}\n사용자 답변: {stt_input}"
+
+        # 3. 누적된 요약을 바탕으로 질문 생성
+        prompt = chat_prompt.format(chat_history=updated_summary, last_answer=stt_input)
         response = client.invoke(prompt)
 
         # 응답에서 질문을 추출
@@ -275,18 +278,15 @@ def generate_question(stt_input: str) -> tuple:
         for i, question in enumerate(questions):
             print(f"질문 {i+1}: {question}")
 
-        # 메모리에 사용자 입력을 통해 요약 갱신
-        memory.save_context({"input": stt_input}, {"output": response_text})
+        # 4. 사용자 답변이 포함된 요약을 메모리에 저장하여 누적 유지g
+        memory.save_context({"input": stt_input}, {"output": updated_summary})
 
-        # 요약을 위한 텍스트 추출
-        summary_text = memory.load_memory_variables({}).get("history", "")
-
-        # 질문과 요약을 반환
+        # 질문과 누적된 요약을 반환
         return {
-            "question1": questions[0],
-            "question2": questions[1],
-            "question3": questions[2]
-        }, summary_text
+            "question1": questions[0] if len(questions) > 0 else "",
+            "question2": questions[1] if len(questions) > 1 else "",
+            "question3": questions[2] if len(questions) > 2 else ""
+        }, updated_summary
 
     except ValueError as e:
         print(f"Validation Error: {str(e)}")
