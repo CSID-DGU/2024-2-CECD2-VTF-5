@@ -35,7 +35,7 @@ class _MyPageWidgetState extends State<MyPageWidget> {
                       onTap: () => Navigator.of(context).pop(),
                       child: const Icon(
                         Icons.close,
-                        size: 24,
+                        size: 24
                       ),
                     ),
                   ),

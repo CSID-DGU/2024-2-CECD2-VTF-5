@@ -15,5 +15,7 @@ class Member(Base):
     is_married = Column(Boolean, nullable=False) # 결혼했는지 (1결혼, 0미혼)
     has_child = Column(Boolean, nullable=False) # 아이있는지 (1자녀있음, 0자녀없음)
 
+    summary = Column(String, nullable=True) # 서머리 추가
+
     # Relationships
     summaries = relationship("Summary", back_populates="member", lazy='joined')
