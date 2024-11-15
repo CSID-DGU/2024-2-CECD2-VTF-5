@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/recording_service.dart';
 
 class ChatWidget extends StatefulWidget {
   const ChatWidget({Key? key}) : super(key: key);
@@ -9,6 +10,8 @@ class ChatWidget extends StatefulWidget {
 
 class _ChatWidgetState extends State<ChatWidget> {
   late ChatModel _model;
+  late RecordingService _recordingService;
+  bool isRecording = false;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -16,6 +19,7 @@ class _ChatWidgetState extends State<ChatWidget> {
   void initState() {
     super.initState();
     _model = ChatModel();
+    _recordingService = RecordingService();
   }
 
   @override
@@ -104,9 +108,16 @@ class _ChatWidgetState extends State<ChatWidget> {
                   ),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(24),
-                    child: Image.asset('assets/images/Listening.png',
-                      width: 100,height: 100,
-                      fit: BoxFit.cover,
+                    child: GestureDetector(
+                      onTap: _toggleRecording,
+                      child: Image.asset(
+                        isRecording
+                        ? 'assets/images/Listening.png'
+                        : 'assets/images/Listening2.png',
+                        width: 100,
+                        height: 100,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                   Row(
@@ -164,6 +175,17 @@ class _ChatWidgetState extends State<ChatWidget> {
         ),
       ),
     );
+  }
+
+  Future<void> _toggleRecording() async {
+    if (_recordingService.isRecording) {
+      await _recordingService.stopRecording();
+    } else {
+      await _recordingService.startRecording();
+    }
+    setState(() {
+      isRecording = _recordingService.isRecording;
+    });
   }
 }
 
