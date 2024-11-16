@@ -61,7 +61,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")  # 비밀번�
 app = FastAPI()
 client = ChatOpenAI(api_key=OPENAI_API_KEY)  # OpenAI 클라이언트 초기화
 
-# CORS 설정 추가
+""" CORS 설정 추가 """
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # 모든 출처 허용 (개발 중에만 사용)
@@ -77,30 +77,32 @@ memory = ConversationSummaryMemory(
     return_messages=True,
 )
 
-""" JWT : 비밀번호 해싱 함수 """
 def get_password_hash(password: str) -> str:
+    """
+    JWT : 비밀번호 해싱 함수
+    """
     return pwd_context.hash(password)
 
 
-""" JWT : 비밀번호 검증 함수 """
 def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """
+    JWT : 비밀번호 검증 함수
+    """
     return pwd_context.verify(plain_password, hashed_password)
 
-
-""" JWT : 토큰 생성하기 """
-
-
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    """
+    JWT : 토큰 생성하기
+    """
     to_encode = data.copy()
     expire = datetime.utcnow() + (expires_delta if expires_delta else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire})
     return pyjwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-
-""" JWT : 토큰 디코드 하기 """
-
-
 def decode_access_token(token: str):
+    """
+    JWT : 토큰 디코드 하기
+    """
     try:
         payload = pyjwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload
@@ -110,10 +112,10 @@ def decode_access_token(token: str):
         raise HTTPException(status_code=401, detail="Invalid token")
 
 
-""" 의존성 주입을 위한 DB 세션 함수 """
-
-
 def get_db():
+    """
+    의존성 주입을 위한 DB 세션 함수
+    """
     db = SessionLocal()
     try:
         yield db
@@ -126,24 +128,20 @@ member_life_prompt = PromptTemplate(input_variables=["chat_history", "last_answe
 autobiography_prompt = PromptTemplate(input_variables=["name", "age", "responses"],
                                       template=complete_prompt.biography_prompt)
 
-""" STT, TTS 입력 모델 정의 """
-
-
 class SpeechModel(BaseModel):
+    """
+    STT, TTS 입력 모델 정의
+    """
     stt_input: str = None  # STT에서 사용, 선택적
     tts_input: str = None  # TTS에서 사용, 선택적
 
-
-""" gpt 질문 생성하기 """
-
-
 @app.post("/generate_question")
-async def generate_question(
-        input_data: SpeechModel,  # 입력을 JSON Body로 받음
-        db: Session = Depends(get_db),
-        token: str = Depends(oauth2_scheme)
-):
+async def generate_question(input_data: SpeechModel, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
+    """
+    gpt에게 질문 생성 요청
+    """
     stt_input = input_data.stt_input  # JSON Body에서 텍스트 추출
+    
     # 사용자 ID 추출
     try:
         token_data = decode_access_token(token)
@@ -230,19 +228,24 @@ def update_user_summary(db: Session, user_id: str, summary_text: str):
 
 @app.post("/stt")
 async def speech_to_text(recordFile: UploadFile = File(...)):
+    """
+    STT로 질문 txt 뽑아내기
+    """
     return await stt.stt_request(recordFile, client_id, client_secret)
 
 
 @app.post("/tts")
-async def generate_tts(request: SpeechModel):
+async def text_to_speech(request: SpeechModel):
+    """
+    TTS로 질문내역 음성으로 들려주기
+    """
     pass
 
-
-################################################################################
-
-# 회원가입
 @app.post("/signup", response_model=memberDto.Member)
 def signup(member_data: memberDto.MemberCreate, db: Session = Depends(get_db)):
+    """
+    사용자 회원가입 하기
+    """
     db_member = db.query(member.Member).filter(member.Member.login_id == member_data.login_id).first()
     if db_member:
         raise HTTPException(status_code=400, detail="아이디가 이미 존재합니다.")
@@ -264,9 +267,12 @@ def signup(member_data: memberDto.MemberCreate, db: Session = Depends(get_db)):
     return new_member
 
 
-# 로그인 (JWT 토큰 발급)
 @app.post("/login", response_model=memberDto.Token)
 def login_for_access_token(login_data: LoginRequest, db: Session = Depends(get_db)):
+    """
+    사용자 로그인 후 JWT 토큰 발급
+    """
+
     # 사용자 조회
     present_member = db.query(member.Member).filter(member.Member.login_id == login_data.login_id).first()
 
@@ -290,7 +296,6 @@ def login_for_access_token(login_data: LoginRequest, db: Session = Depends(get_d
         "name": present_member.name,  # 사용자 이름 반환
         "login_id": login_data.login_id
     }
-
 ################################################################################
 # 루트 경로 엔드포인트 정의 (HTML 페이지 렌더링)
 # @app.get("/", response_class=HTMLResponse)
