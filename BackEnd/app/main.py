@@ -46,7 +46,7 @@ client_id = os.getenv("YOUR_CLIENT_ID")
 client_secret = os.getenv("YOUR_CLIENT_SECRET")
 
 # JWT 설정
-SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY", "your_secret_key")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
