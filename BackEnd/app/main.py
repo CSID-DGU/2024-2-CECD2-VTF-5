@@ -1,11 +1,12 @@
-import asyncio, json, sqlite3, os, requests
+import asyncio, json, sqlite3, os, requests, io
 from dotenv import load_dotenv
+from typing import Optional
+
 
 # JWT 관련
 import jwt as pyjwt  # pyjwt 패키지를 사용하고 있음. jwt말고, pyjwt 써야함. 충돌 가능해서
 
 from openai import OpenAIError
-from typing import Optional
 
 # 랭체인 관련
 from langchain.memory import ConversationSummaryMemory
@@ -31,7 +32,7 @@ from ..config.test_database import SessionLocal
 from ..dto.memberDto import LoginRequest
 from ..entity import member
 from ..dto import memberDto
-
+from ..service import tts, stt
 
 # 환경 변수 로드
 dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
@@ -152,43 +153,15 @@ autobiography_output_prompt = """
 chat_prompt = PromptTemplate(input_variables=["chat_history", "last_answer"], template=chat_prompt_template)
 autobiography_prompt = PromptTemplate(input_variables=["name", "age", "responses"], template=autobiography_output_prompt)
 ################################################################################
-""" Naver STT 라이브러리 """
-@app.post("/stt")
-async def speech_to_text(
-    recordFile: UploadFile = File(...),
-):
-    # 음성 파일을 Naver STT API로 보내기
-    url = "https://naveropenapi.apigw.ntruss.com/recog/v1/stt?lang=Kor"
-    data = await recordFile.read()
-    headers = {
-        "X-NCP-APIGW-API-KEY-ID": client_id,
-        "X-NCP-APIGW-API-KEY": client_secret,
-        "Content-Type": "application/octet-stream"
-    }
-    response = requests.post(url, data=data, headers=headers)
-    if response.status_code == 200:
-        print("STT 결과:", response.text)
+""" 입력 모델 정의 """
+class SpeechModel(BaseModel):
+    stt_input: str = None  # STT에서 사용, 선택적
+    tts_input: str = None  # TTS에서 사용, 선택적
 
-        # JSON 응답 파싱
-        try:
-            stt_result = json.loads(response.text)
-            stt_input = stt_result.get("text", "")
-        except json.JSONDecodeError:
-            stt_input = response.text  # JSON 파싱 실패 시 일반 텍스트로 사용
-
-        # 텍스트 반환
-        return {"text": stt_input}
-    else:
-        print("Error:", response.text)
-        raise HTTPException(status_code=500, detail="STT 변환 중 오류가 발생했습니다.")
-
-# 입력 모델 정의
-class GenerateQuestionInput(BaseModel):
-    stt_input: str
-
+""" gpt 질문 생성하기 """
 @app.post("/generate_question")
 async def generate_question(
-    input_data: GenerateQuestionInput,  # 입력을 JSON Body로 받음
+    input_data: SpeechModel,  # 입력을 JSON Body로 받음
     db: Session = Depends(get_db),
     token: str = Depends(oauth2_scheme)
 ):
@@ -257,7 +230,6 @@ async def generate_question(
         print(f"General error in generating question from input: {str(e)}")
         raise HTTPException(status_code=500, detail="질문 생성 중 오류가 발생했습니다.")
 
-
 def update_user_summary(db: Session, user_id: str, summary_text: str):
     """
     사용자의 summary 필드를 요약본으로 업데이트합니다.
@@ -275,6 +247,14 @@ def update_user_summary(db: Session, user_id: str, summary_text: str):
     else:
         print(f"사용자 {user_id}를 찾을 수 없습니다.")
         raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+
+@app.post("/stt")
+async def speech_to_text(recordFile: UploadFile = File(...)):
+    return await stt.stt_request(recordFile, client_id, client_secret)
+
+@app.post("/tts")
+async def generate_tts(request: SpeechModel):
+    pass
 ################################################################################
 
 # 회원가입
