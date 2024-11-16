@@ -127,7 +127,7 @@ chat_prompt_template = """
 
 
 autobiography_output_prompt = """
-당신은 자서전 작성을 돕는 AI Assistant입니다. 아래 데이터를 바탕으로 자서전 포맷에 맞게 내용을 구성하세요.
+당신은 자서전 작성을 돕는 AI Assistant입니다. 아래 데이터를 바탕으로 자연스럽고 감성적인 자서전을 작성하세요.
 
 사용자 정보:
 - 이름: {name}
@@ -135,15 +135,14 @@ autobiography_output_prompt = """
 - 주요 대답 내용: {responses}
 
 출력 조건:
-1. 자서전은 아래 형식을 따라야 합니다:
-   - 제목: "나의 이야기, {name}"
-   - 소개: "저는 {name}입니다. {age}살이고, 제 삶의 이야기를 나누고자 합니다."
-   - 챕터 1 - 중요한 사건: 사용자 대답 중 인생의 중요한 사건을 기반으로 작성.
-   - 챕터 2 - 가족과의 추억: 사용자 대답 중 가족과 관련된 기억을 기반으로 작성.
-   - 챕터 3 - 인생의 교훈: 사용자 대답 중 느낀 점, 교훈, 가치를 기반으로 작성.
+1. 자서전은 아래 느낌을 따릅니다:
+   - 어린 시절부터 현재까지의 삶을 자연스럽게 연결하며 서술.
+   - 감성적이고 시적인 어조를 사용.
+   - 독자에게 따뜻한 여운을 남기는 방식으로 마무리.
 
-2. 각 챕터는 따뜻하고 감동적인 어조로 작성하세요.
-3. 챕터 제목을 포함하여, 내용을 매끄럽게 연결하세요.  
+2. 항상 내용을 매끄럽게 연결하세요.
+
+
 
 출력 결과:
 """
@@ -327,6 +326,70 @@ def login_for_access_token(login_data: LoginRequest, db: Session = Depends(get_d
         "name": present_member.name,  # 사용자 이름 반환
         "login_id": login_data.login_id
     }
+
+# 자서전 처리 함수
+def process_autobiography_text(db: Session, user_id: str):
+    # DB에서 사용자 정보 가져오기
+    user = db.query(member.Member).filter(member.Member.login_id == user_id).first()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+    
+    user_name = user.name  # 사용자 이름 가져오기
+    
+    # 파일 경로 설정
+    text_file_path = "C:/Users/Junbeom/Desktop/2024-2-CECD2-VTF-5/BackEnd/app/process_autobiography_text.txt"
+    
+    try:
+        # 텍스트 파일 읽기
+        with open(text_file_path, "r", encoding="utf-8") as file:
+            autobiography_text = file.read()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"파일 읽기 오류: {str(e)}")
+    
+    # 템플릿 준비
+    prompt = PromptTemplate(input_variables=["name", "autobiography_text"], template=autobiography_output_prompt)
+    
+    # 텍스트와 사용자 이름 삽입
+    formatted_prompt = prompt.format(name=user_name, autobiography_text=autobiography_text)
+    
+    # OpenAI 모델 호출
+    response = client.invoke(formatted_prompt)
+    
+    return response
+
+# API 엔드포인트 수정
+@app.post("/complete")
+def process_autobiography(token: str = Depends(oauth2_scheme)):
+    """
+    완성된 자서전 텍스트를 요약하여 반환합니다. 
+    사용자 이름을 가져오는 예시입니다.
+    """
+    try:
+        # 토큰을 디코드하여 사용자 정보 추출
+        decoded_token = decode_access_token(token)
+        user_name = decoded_token.get("sub")  # JWT payload에서 'sub' 필드가 사용자 ID로 가정
+
+        # 사용자 이름 확인
+        if not user_name:
+            raise HTTPException(status_code=400, detail="User name not found in token")
+
+        # 사용자 이름을 이용해 추가적인 로직 처리 (예: 자서전 생성)
+        return {"message": f"Autobiography processing for {user_name}"}
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing autobiography: {str(e)}")
+
+def get_current_user(token: str = Depends(oauth2_scheme)):
+    try:
+        # JWT 디코딩하여 사용자의 정보를 반환
+        user_data = decode_access_token(token)
+        return user_data
+    except Exception as e:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
 
 ################################################################################
 # 루트 경로 엔드포인트 정의 (HTML 페이지 렌더링)
