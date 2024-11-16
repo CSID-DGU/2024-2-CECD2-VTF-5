@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class SignupWidget extends StatefulWidget {
   const SignupWidget({Key? key}) : super(key: key);
@@ -20,6 +22,103 @@ class _SignupWidgetState extends State<SignupWidget> {
   bool _passwordVisibility2 = false;
   bool _isSingle = true;
   bool _hasChildren = false;
+  bool _isLoading=false;
+
+  Future<void> _signup() async {
+    if (_passwordController.text != _passwordConfirmController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('비밀번호가 일치하지 않습니다.')),
+      );
+      return;
+    }
+    setState(() {
+      _isLoading=true;
+    });
+  }
+
+  Future<void> _handleSignup() async {
+    final Map<String, dynamic> signupData = {
+      'login_id': _idController.text.trim(),
+      'password': _passwordController.text.trim(),
+      'name': _nameController.text.trim(),
+      'email': _emailController.text.trim(),
+      'birth': _getBirthFromSocialSecurity(),
+      'is_male': true,
+      'socialSecurity': _getSocialSecurity(),
+      'is_married': _isSingle ? "true" : "false",
+      'has_child': _hasChildren ? "true" : "false",
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:8000/signup'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(signupData),
+      );
+
+      if (response.statusCode == 200) {
+        final decodedBody = utf8.decode(response.bodyBytes);
+        final responseBody = jsonDecode(decodedBody);
+        print('회원가입 성공! JWT: ${responseBody['token']}');
+      } else {
+        final decodedBody = utf8.decode(response.bodyBytes);
+        final errorResponse = jsonDecode(decodedBody);
+        print('회원가입 실패: ${errorResponse['detail']}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('회원가입 실패: ${errorResponse['detail']}')),
+        );
+      }
+    } catch (error) {
+      print('오류 발생: $error');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('오류 발생: $error')),
+      );
+    }finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  String _getSocialSecurity() {
+    final front = _socialSecurityFrontController.text.trim();
+    final back = _socialSecurityBackController.text.trim();
+
+    if (front.length != 6 || back.length != 1) {
+      throw Exception('주민등록번호 형식이 올바르지 않습니다.');
+    }
+
+    if (front.isEmpty || back.isEmpty) {
+      throw Exception('주민등록번호를 입력해주세요.');
+    }
+
+    return '$front-$back';
+  }
+
+  String _getBirthFromSocialSecurity() {
+    final front = _socialSecurityFrontController.text.trim();
+
+    if (front.length != 6 || int.tryParse(front) == null) {
+      throw Exception('주민등록번호 앞자리(6자리)를 올바르게 입력하세요.');
+    }
+
+    // 생년월일 추출 (YYYY-MM-DD 형식으로 변환)
+    final year = int.parse(front.substring(0, 2)); // 앞 2자리 (년도)
+    final month = front.substring(2, 4); // 중간 2자리 (월)
+    final day = front.substring(4, 6); // 마지막 2자리 (일)
+
+    // 주민등록번호 뒷자리 첫 숫자로 세기 구분 (1,2=1900년대 / 3,4=2000년대)
+    final back = _socialSecurityBackController.text.trim();
+    if (back.isEmpty || int.tryParse(back) == null) {
+      throw Exception('주민등록번호 뒷자리 첫 숫자를 올바르게 입력하세요.');
+    }
+
+    final century = (back.startsWith('1') || back.startsWith('2')) ? 1900 : 2000;
+
+    return '${century + year}-$month-$day'; // 최종 생년월일 반환
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -106,9 +205,22 @@ class _SignupWidgetState extends State<SignupWidget> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      print('가입하기');
+                      // 입력된 정보를 출력
+                      print('아이디: ${_idController.text.trim()}');
+                      print('비밀번호: ${_passwordController.text.trim()}');
+                      print('비밀번호 확인: ${_passwordConfirmController.text.trim()}');
+                      print('이름: ${_nameController.text.trim()}');
+                      print('이메일: ${_emailController.text.trim()}');
+                      print('주민등록번호: ${_socialSecurityFrontController.text.trim()}-${_socialSecurityBackController.text.trim()}');
+                      print('결혼 여부: ${_isSingle ? "미혼" : "기혼"}');
+                      print('자녀 유무: ${_hasChildren ? "유" : "무"}');
+
+                      // 백엔드와 통신
+                      _handleSignup();
                     },
-                    child: const Text('가입하기'),
+                    child: _isLoading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text('가입하기'),
                   ),
                 ),
               ],
