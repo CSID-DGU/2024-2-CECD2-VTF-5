@@ -1,38 +1,38 @@
 import asyncio, json, sqlite3, os, requests, io
 from dotenv import load_dotenv
 from typing import Optional
-
+from pydantic import BaseModel
 
 # JWT 관련
 import jwt as pyjwt  # pyjwt 패키지를 사용하고 있음. jwt말고, pyjwt 써야함. 충돌 가능해서
+from fastapi.security import OAuth2PasswordBearer
+from passlib.context import CryptContext
 
-from openai import OpenAIError
+# 테이블 관련
+from sqlalchemy.orm import Session
 
 # 랭체인 관련
+from openai import OpenAIError
 from langchain.memory import ConversationSummaryMemory
 from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
 
 # FastAPI 관련
 from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, status, Request
-from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from passlib.context import CryptContext
 from datetime import datetime, timedelta
 
-# SQL 관련
-from sqlalchemy.orm import Session
+# html 템플릿 관련 (안쓰니까 일단 주석처리)
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
 
-from pydantic import BaseModel
-
-
+# py 파일들 불러오기
 from ..config.test_database import SessionLocal
 from ..dto.memberDto import LoginRequest
 from ..entity import member
 from ..dto import memberDto
 from ..service import tts, stt
+from ..prompt import complete_prompt, member_prompt
 
 # 환경 변수 로드
 dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
@@ -41,7 +41,7 @@ load_dotenv(dotenv_path=dotenv_path)
 # OpenAI API 키를 환경 변수에서 가져오기
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-# Naver STT 시크릿키
+# Naver STT key
 client_id = os.getenv("YOUR_CLIENT_ID")
 client_secret = os.getenv("YOUR_CLIENT_SECRET")
 
@@ -49,15 +49,17 @@ client_secret = os.getenv("YOUR_CLIENT_SECRET")
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
-# 비밀번호 해싱을 위한 설정
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# 비밀번호 관련
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")  # 비밀번호 해싱을 위한 설정
+
+# html 템플릿 관련
+# templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
 
 # 최상위 2024~~에서 uvicorn BackEnd.app.main:app --reload
 app = FastAPI()
-templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
-client = ChatOpenAI(api_key=OPENAI_API_KEY) # OpenAI 클라이언트 초기화
+client = ChatOpenAI(api_key=OPENAI_API_KEY)  # OpenAI 클라이언트 초기화
 
 # CORS 설정 추가
 app.add_middleware(
@@ -68,37 +70,36 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 요약 기반 메모리 생성 (200 토큰 제한)
+""" 요약 기반 메모리 생성 (200 토큰 제한) """
 memory = ConversationSummaryMemory(
     llm=client,
     max_token_limit=200,  # 요약의 기준이 되는 토큰 길이를 설정합니다.
     return_messages=True,
 )
 
-# 의존성 주입을 위한 DB 세션 함수
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-# JWT : 비밀번호 해싱 함수
+""" JWT : 비밀번호 해싱 함수 """
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
-# JWT : 비밀번호 검증 함수
+
+""" JWT : 비밀번호 검증 함수 """
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
-# JWT : 토큰 생성하기
+
+""" JWT : 토큰 생성하기 """
+
+
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     expire = datetime.utcnow() + (expires_delta if expires_delta else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire})
     return pyjwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-# JWT : 토큰 디코드 하기
+
+""" JWT : 토큰 디코드 하기 """
+
+
 def decode_access_token(token: str):
     try:
         payload = pyjwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -109,61 +110,38 @@ def decode_access_token(token: str):
         raise HTTPException(status_code=401, detail="Invalid token")
 
 
-chat_prompt_template = """
-당신은 자서전 작성을 돕는 AI Assistant입니다. 지금까지의 대화 내용을 바탕으로 노인의 삶의 경험과 기억을 되살릴 수 있는 질문을 생성해야 합니다.
-
-대화 기록:
-{chat_history}
-
-사용자의 마지막 답변: {last_answer}
-
-위의 정보를 바탕으로, 노인이 자신의 이야기를 더 깊이 생각하고 이야기할 수 있는 다음 질문을 3개 생성하세요. 질문은 친절하고 따뜻한 어조로 작성되어야 하며, 다음 주제를 다룰 수 있습니다:
-- 인생의 중요한 사건
-- 어린 시절의 기억
-- 가족, 친구와의 추억
-- 인생에서 가장 자랑스러웠던 순간
-
-생성된 질문:
-"""
+""" 의존성 주입을 위한 DB 세션 함수 """
 
 
-autobiography_output_prompt = """
-당신은 자서전 작성을 돕는 AI Assistant입니다. 아래 데이터를 바탕으로 자서전 포맷에 맞게 내용을 구성하세요.
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-사용자 정보:
-- 이름: {name}
-- 나이: {age}
-- 주요 대답 내용: {responses}
 
-출력 조건:
-1. 자서전은 아래 형식을 따라야 합니다:
-   - 제목: "나의 이야기, {name}"
-   - 소개: "저는 {name}입니다. {age}살이고, 제 삶의 이야기를 나누고자 합니다."
-   - 챕터 1 - 중요한 사건: 사용자 대답 중 인생의 중요한 사건을 기반으로 작성.
-   - 챕터 2 - 가족과의 추억: 사용자 대답 중 가족과 관련된 기억을 기반으로 작성.
-   - 챕터 3 - 인생의 교훈: 사용자 대답 중 느낀 점, 교훈, 가치를 기반으로 작성.
+""" PromptTemplate 객체 생성 """
+member_life_prompt = PromptTemplate(input_variables=["chat_history", "last_answer"], template=member_prompt.life_prompt)
+autobiography_prompt = PromptTemplate(input_variables=["name", "age", "responses"],
+                                      template=complete_prompt.biography_prompt)
 
-2. 각 챕터는 따뜻하고 감동적인 어조로 작성하세요.
-3. 챕터 제목을 포함하여, 내용을 매끄럽게 연결하세요.  
+""" STT, TTS 입력 모델 정의 """
 
-출력 결과:
-"""
 
-# PromptTemplate 객체 생성
-chat_prompt = PromptTemplate(input_variables=["chat_history", "last_answer"], template=chat_prompt_template)
-autobiography_prompt = PromptTemplate(input_variables=["name", "age", "responses"], template=autobiography_output_prompt)
-################################################################################
-""" 입력 모델 정의 """
 class SpeechModel(BaseModel):
     stt_input: str = None  # STT에서 사용, 선택적
     tts_input: str = None  # TTS에서 사용, 선택적
 
+
 """ gpt 질문 생성하기 """
+
+
 @app.post("/generate_question")
 async def generate_question(
-    input_data: SpeechModel,  # 입력을 JSON Body로 받음
-    db: Session = Depends(get_db),
-    token: str = Depends(oauth2_scheme)
+        input_data: SpeechModel,  # 입력을 JSON Body로 받음
+        db: Session = Depends(get_db),
+        token: str = Depends(oauth2_scheme)
 ):
     stt_input = input_data.stt_input  # JSON Body에서 텍스트 추출
     # 사용자 ID 추출
@@ -188,7 +166,7 @@ async def generate_question(
         updated_summary = f"{existing_summary}\n사용자 답변: {stt_input}"
 
         # 3. 누적된 요약을 바탕으로 질문 생성
-        prompt = chat_prompt.format(chat_history=updated_summary, last_answer=stt_input)
+        prompt = member_life_prompt.format(chat_history=updated_summary, last_answer=stt_input)
         response = client.invoke(prompt)
 
         # 응답에서 질문을 추출
@@ -204,7 +182,7 @@ async def generate_question(
         questions = [q.strip() for q in questions if q.strip()][:3]
 
         for i, question in enumerate(questions):
-            print(f"질문 {i+1}: {question}")
+            print(f"질문 {i + 1}: {question}")
 
         # 4. 사용자 답변이 포함된 요약을 메모리에 저장하여 누적 유지
         memory.save_context({"input": stt_input}, {"output": updated_summary})
@@ -230,6 +208,7 @@ async def generate_question(
         print(f"General error in generating question from input: {str(e)}")
         raise HTTPException(status_code=500, detail="질문 생성 중 오류가 발생했습니다.")
 
+
 def update_user_summary(db: Session, user_id: str, summary_text: str):
     """
     사용자의 summary 필드를 요약본으로 업데이트합니다.
@@ -248,13 +227,17 @@ def update_user_summary(db: Session, user_id: str, summary_text: str):
         print(f"사용자 {user_id}를 찾을 수 없습니다.")
         raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
 
+
 @app.post("/stt")
 async def speech_to_text(recordFile: UploadFile = File(...)):
     return await stt.stt_request(recordFile, client_id, client_secret)
 
+
 @app.post("/tts")
 async def generate_tts(request: SpeechModel):
     pass
+
+
 ################################################################################
 
 # 회원가입
@@ -266,9 +249,9 @@ def signup(member_data: memberDto.MemberCreate, db: Session = Depends(get_db)):
 
     hashed_password = get_password_hash(member_data.password)
     new_member = member.Member(
-        name = member_data.name,
+        name=member_data.name,
         login_id=member_data.login_id,
-        password=hashed_password, # 해시값
+        password=hashed_password,  # 해시값
         email=member_data.email,
         birth=member_data.birth,
         is_male=member_data.is_male,
@@ -310,18 +293,18 @@ def login_for_access_token(login_data: LoginRequest, db: Session = Depends(get_d
 
 ################################################################################
 # 루트 경로 엔드포인트 정의 (HTML 페이지 렌더링)
-@app.get("/", response_class=HTMLResponse)
-async def read_root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
-
-@app.get("/signup", response_class=HTMLResponse)
-async def signup_page(request: Request):
-    return templates.TemplateResponse("signup.html", {"request": request})
-
-@app.get("/login", response_class=HTMLResponse)
-async def login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
-
-@app.get("/generate_question", response_class=HTMLResponse)
-async def generate_question_page(request: Request):
-    return templates.TemplateResponse("generate_question.html", {"request": request})
+# @app.get("/", response_class=HTMLResponse)
+# async def read_root(request: Request):
+#     return templates.TemplateResponse("index.html", {"request": request})
+#
+# @app.get("/signup", response_class=HTMLResponse)
+# async def signup_page(request: Request):
+#     return templates.TemplateResponse("signup.html", {"request": request})
+#
+# @app.get("/login", response_class=HTMLResponse)
+# async def login_page(request: Request):
+#     return templates.TemplateResponse("login.html", {"request": request})
+#
+# @app.get("/generate_question", response_class=HTMLResponse)
+# async def generate_question_page(request: Request):
+#     return templates.TemplateResponse("generate_question.html", {"request": request})
