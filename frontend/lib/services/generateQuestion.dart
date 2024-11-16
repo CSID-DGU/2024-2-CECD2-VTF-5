@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../service/recording_service.dart';
+import './recording_service.dart';
 
 class genQuestionService {
   List<String> useResponses() {
