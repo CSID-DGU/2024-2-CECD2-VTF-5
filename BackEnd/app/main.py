@@ -268,7 +268,7 @@ def signup(member_data: memberDto.MemberCreate, db: Session = Depends(get_db)):
 
 
 @app.post("/login", response_model=memberDto.Token)
-def login_for_access_token(login_data: LoginRequest, db: Session = Depends(get_db)):
+def login(login_data: LoginRequest, db: Session = Depends(get_db)):
     """
     사용자 로그인 후 JWT 토큰 발급
     """
@@ -296,6 +296,73 @@ def login_for_access_token(login_data: LoginRequest, db: Session = Depends(get_d
         "name": present_member.name,  # 사용자 이름 반환
         "login_id": login_data.login_id
     }
+
+def calculate_age(birth_date: str) -> int:
+    """
+    나이 계산 함수
+    """
+    try:
+        # 날짜 형식이 'YYYYMMDD'라면 %Y%m%d로 파싱
+        birth_date_obj = datetime.strptime(birth_date, "%Y%m%d")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format, expected 'YYYYMMDD'.")
+
+    today = datetime.today()
+    age = today.year - birth_date_obj.year - ((today.month, today.day) < (birth_date_obj.month, birth_date_obj.day))
+    return age
+
+
+@app.post("/complete")
+def process_autobiography(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    """
+    완성된 자서전 텍스트를 요약하여 반환
+    사용자 정보와 요약 내용을 가져옴
+    """
+    print(f"Received token: {token}")  # 받은 토큰 출력
+    try:
+        # 토큰을 디코드하여 사용자 정보 추출
+        decoded_token = decode_access_token(token)
+        user_id = decoded_token.get("sub")  # JWT payload에서 'sub' 필드가 사용자 ID로 가정
+        print(f"Decoded user_id: {user_id}")  # 디코딩된 user_id 출력
+
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid token: User ID not found.")
+
+        # 사용자 정보 가져오기
+        user = db.query(member.Member).filter(member.Member.login_id == user_id).first()
+
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found.")
+
+        # 사용자 이름과 요약 (summary) 값 사용
+        user_name = user.name
+        user_summary = user.summary  # DB에서 가져온 summary
+        user_birth = user.birth  # 사용자 생년월일
+
+        # 나이 계산 (생년월일을 기준으로 나이 계산)
+        user_age = calculate_age(user_birth)
+
+        if not user_summary:
+            raise HTTPException(status_code=400, detail="User has not provided a summary.")
+
+        # PromptTemplate 준비
+        formatted_prompt = autobiography_prompt.format(
+            name=user_name,
+            age=user_age,
+            responses=user_summary
+        )
+
+        # OpenAI 호출
+        response = client.invoke(formatted_prompt)
+
+        # 결과 반환
+        return {"autobiography": response}
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing autobiography: {str(e)}")
+
 ################################################################################
 # 루트 경로 엔드포인트 정의 (HTML 페이지 렌더링)
 # @app.get("/", response_class=HTMLResponse)
