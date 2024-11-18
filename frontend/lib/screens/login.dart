@@ -217,6 +217,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                     const Text('|'),
                     TextButton(
                       onPressed: () {
+                        Get.toNamed('/lostPassword');
                         print('비밀번호 찾기 클릭');
                       },
                       child: const Text(

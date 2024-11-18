@@ -33,7 +33,9 @@ class _MyPageWidgetState extends State<MyPageWidget> {
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(0, 0, 20, 0),
                     child: InkWell(
-                      onTap: () => Navigator.of(context).pop(),
+                      onTap: () {
+                        Get.back();
+                      },
                       child: const Icon(
                         Icons.close,
                         size: 24

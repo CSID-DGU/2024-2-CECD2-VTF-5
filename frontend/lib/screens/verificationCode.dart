@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class VeriCodeWidget extends StatefulWidget {
   const VeriCodeWidget({Key? key}) : super(key: key);
@@ -80,6 +81,7 @@ class _VeriCodeWidgetState extends State<VeriCodeWidget> {
                 SizedBox(height: 30),
                 ElevatedButton(
                   onPressed: () {
+                    Get.toNamed('/lostPasswordUpdate');
                     print('인증하기 클릭됨.');
                   },
                   style: ElevatedButton.styleFrom(
