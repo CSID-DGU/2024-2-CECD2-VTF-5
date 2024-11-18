@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class NewPasswordWidget extends StatelessWidget {
-  const NewPasswordWidget({super.key});
+class LostPasswordUpdateWidget extends StatelessWidget {
+  const LostPasswordUpdateWidget({super.key});
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -44,27 +44,6 @@ class NewPasswordWidget extends StatelessWidget {
                             obscureText: true,
                             decoration: InputDecoration(
                               labelStyle: TextStyle(
-                                color:Color(0xFF424242),
-                              ),
-                              labelText: "기존 비밀번호를 입력해 주세요.",
-                              enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: Color(0xFF424242)
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: Color(0xFF5AB15B),
-                                  width: 2.0
-                                ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 20),
-                          TextField(
-                            obscureText: true,
-                            decoration: InputDecoration(
-                              labelStyle: TextStyle(
                                 color: Color(0xFF424242),
                               ),
                               labelText: "새로운 비밀번호를 입력해 주세요.",
@@ -72,12 +51,14 @@ class NewPasswordWidget extends StatelessWidget {
                                 borderSide: BorderSide(
                                   color: Color(0xFF424242)
                                 ),
+                                borderRadius: BorderRadius.circular(8),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderSide: BorderSide(
                                   color: Color(0xFF5AB15B),
                                   width: 2.0,
                                 ),
+                                borderRadius: BorderRadius.circular(8),
                               ),
                             ),
                           ),
@@ -93,12 +74,14 @@ class NewPasswordWidget extends StatelessWidget {
                                 borderSide: BorderSide(
                                   color: Color(0xFF424242)
                                 ),
+                                borderRadius: BorderRadius.circular(8),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderSide: BorderSide(
                                   color: Color(0xFF5AB15B),
                                   width: 2.0,
                                 ),
+                                borderRadius: BorderRadius.circular(8),
                               ),
                             ),
                           ),
@@ -112,7 +95,7 @@ class NewPasswordWidget extends StatelessWidget {
                               minimumSize: Size(200, 60),
                             ),
                             onPressed: () {
-                              Get.back();
+                              Get.toNamed('homePage');
                             },
                             child: Text(
                               '변경완료',
