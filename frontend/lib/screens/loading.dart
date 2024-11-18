@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
-class Loading extends StatelessWidget {
-  const Loading({super.key});
+class LoadingWidget extends StatelessWidget {
+  const LoadingWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
+
+    //// 2초 후 로딩화면 넘어가도록
+    Future.delayed(const Duration(seconds: 2), () {
+      Get.offNamed('/login');
+    });
 
     return Scaffold(
       backgroundColor: Colors.white,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class SignupWidget extends StatefulWidget {
   const SignupWidget({Key? key}) : super(key: key);
@@ -106,6 +107,7 @@ class _SignupWidgetState extends State<SignupWidget> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
+                      Get.toNamed('/homePage');
                       print('가입하기');
                     },
                     child: const Text('가입하기'),

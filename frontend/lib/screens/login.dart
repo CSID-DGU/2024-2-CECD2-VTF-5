@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class LoginWidget extends StatefulWidget {
   const LoginWidget({super.key});
@@ -160,6 +161,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                 // 로그인 버튼
                 ElevatedButton(
                   onPressed: () {
+                    Get.toNamed('/homePage');
                     if (_formKey.currentState?.validate() ?? false) {
                       print('로그인 성공');
                     }
@@ -201,16 +203,29 @@ class _LoginWidgetState extends State<LoginWidget> {
                   children: [
                     TextButton(
                       onPressed: () {
+                        Get.toNamed('/signup');
                         print('회원가입 클릭');
                       },
-                      child: const Text('회원가입'),
+                      child: const Text(
+                        '회원가입',
+                        style: TextStyle(
+                          decoration: TextDecoration.underline,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                     const Text('|'),
                     TextButton(
                       onPressed: () {
                         print('비밀번호 찾기 클릭');
                       },
-                      child: const Text('비밀번호를 잊으셨나요?'),
+                      child: const Text(
+                        '비밀번호를 잊으셨나요?',
+                        style: TextStyle(
+                          decoration: TextDecoration.underline,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ],
                 ),

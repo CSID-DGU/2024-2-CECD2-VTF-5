@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../screens/recorder.dart';
-
+import 'package:get/get.dart';
+import 'routes/app_routes.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,14 +11,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.red),
-        useMaterial3: true,
-      ),
-      home: HomePage(),
+      initialRoute: '/loading',
+      getPages: AppRoutes.routes,
     );
   }
 }

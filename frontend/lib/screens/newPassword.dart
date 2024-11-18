@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class NewPasswordWidget extends StatelessWidget {
   const NewPasswordWidget({super.key});
@@ -110,7 +111,9 @@ class NewPasswordWidget extends StatelessWidget {
                               ),
                               minimumSize: Size(200, 60),
                             ),
-                            onPressed: () {},
+                            onPressed: () {
+                              Get.back();
+                            },
                             child: Text(
                               '변경완료',
                               style: TextStyle(
