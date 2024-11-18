@@ -42,6 +42,7 @@ dependencies:
   http: ^1.2.2
   just_audio: ^0.9.42
   get: ^4.6.6
+  font_awesome_flutter: ^10.8.0
 
 dev_dependencies:
   flutter_test:

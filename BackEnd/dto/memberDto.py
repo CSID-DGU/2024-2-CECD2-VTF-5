@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 from pydantic import BaseModel
 
 # 기본적인 Member 정보 스키마
@@ -30,15 +30,9 @@ class LoginRequest(BaseModel):
     login_id: str
     password: str
 
-# 여러 명의 멤버를 반환할 때 사용
-class MemberList(BaseModel):
-    members: List[Member]
-    class Config:
-        from_attributes = True
-
 # Token 스키마
 class Token(BaseModel):
     access_token: str
     token_type: str
     name: str
-    id: str
+    login_id: str
