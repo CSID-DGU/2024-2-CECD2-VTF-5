@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import '../services/recording_service.dart';
 
 class ChatWidget extends StatefulWidget {
@@ -127,7 +128,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                         padding: const EdgeInsets.only(left: 20),
                         child: InkWell(
                           onTap: () {
-                            Navigator.pushNamed(context, 'HomePage');
+                            Get.back();
                           },
                           child: Column(
                             children: [

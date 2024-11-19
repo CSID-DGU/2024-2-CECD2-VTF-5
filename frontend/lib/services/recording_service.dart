@@ -36,7 +36,7 @@ class RecordingService {
     String url = "http://127.0.0.1:8000/generate_question";
 
     var request = http.MultipartRequest('POST', Uri.parse(url));
-    request.files.add(await http.MultipartFile.fromPath('file', audioFile.path));
+    request.files.add(await http.MultipartFile.fromPath('recordFile', audioFile.path));
 
     try {
       var response = await request.send();
@@ -48,7 +48,7 @@ class RecordingService {
     } catch (e) {
       print('에러: $e');
     }
-
+    
   }
 }
 

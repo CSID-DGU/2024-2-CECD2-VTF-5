@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -205,6 +206,8 @@ class _SignupWidgetState extends State<SignupWidget> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
+                      Get.toNamed('/homePage');
+                      print('가입하기');
                       // 입력된 정보를 출력
                       print('아이디: ${_idController.text.trim()}');
                       print('비밀번호: ${_passwordController.text.trim()}');

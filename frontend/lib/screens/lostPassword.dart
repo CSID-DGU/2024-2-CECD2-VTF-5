@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class LostPWWidget extends StatefulWidget {
   const LostPWWidget({Key? key}) : super(key: key);
@@ -80,6 +81,7 @@ class _LostPWWidgetState extends State<LostPWWidget> {
                 SizedBox(height: 30),
                 ElevatedButton(
                   onPressed: () {
+                    Get.toNamed('/verificationCode');
                     print('이메일 전송 버튼 클릭됨');
                   },
                   style: ElevatedButton.styleFrom(

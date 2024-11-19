@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class MyPageWidget extends StatefulWidget {
   const MyPageWidget({Key? key}) : super(key: key);
@@ -32,7 +33,9 @@ class _MyPageWidgetState extends State<MyPageWidget> {
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(0, 0, 20, 0),
                     child: InkWell(
-                      onTap: () => Navigator.of(context).pop(),
+                      onTap: () {
+                        Get.back();
+                      },
                       child: const Icon(
                         Icons.close,
                         size: 24
@@ -67,6 +70,7 @@ class _MyPageWidgetState extends State<MyPageWidget> {
                     ),
                   ),
                 ),
+                SizedBox(height: 10,),
                 Container(
                   width: 330,
                   decoration: BoxDecoration(
@@ -158,6 +162,7 @@ class _MyPageWidgetState extends State<MyPageWidget> {
                     ),
                   ),
                 ),
+                SizedBox(height: 5,),
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Padding(
@@ -171,6 +176,7 @@ class _MyPageWidgetState extends State<MyPageWidget> {
                     ),
                   ),
                 ),
+                SizedBox(height: 10,),
                 Container(
                   width: 330,
                   decoration: BoxDecoration(
@@ -181,14 +187,27 @@ class _MyPageWidgetState extends State<MyPageWidget> {
                     children: [
                       Align(
                         alignment: Alignment.centerLeft,
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(35, 10, 0, 0),
-                          child: const Text('비밀번호 변경'),
+                        child: InkWell(
+                          onTap: () {
+                            Get.toNamed('/newPassword');
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(35, 10, 0, 0),
+                            child: Text(
+                              '비밀번호 변경',
+                              style: TextStyle(
+                                decoration: TextDecoration.underline,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                       Divider(
-                        thickness: 2,
+                        thickness: 1.7,
                         color: Colors.grey[300],
+                        indent: 20,
+                        endIndent: 20,
                       ),
                       Align(
                         alignment: Alignment.centerLeft,
