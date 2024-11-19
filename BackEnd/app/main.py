@@ -1,12 +1,6 @@
-import asyncio, json, sqlite3, os, requests, io
+import asyncio
 from dotenv import load_dotenv
-from typing import Optional
 from pydantic import BaseModel
-
-# JWT 관련
-import jwt as pyjwt  # pyjwt 패키지를 사용하고 있음. jwt말고, pyjwt 써야함. 충돌 가능해서
-from fastapi.security import OAuth2PasswordBearer
-from passlib.context import CryptContext
 
 # 테이블 관련
 from sqlalchemy.orm import Session
@@ -20,13 +14,13 @@ from langchain.prompts import PromptTemplate
 # FastAPI 관련
 from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, status, Request
 from fastapi.middleware.cors import CORSMiddleware
-from datetime import datetime, timedelta
 
 # html 템플릿 관련 (안쓰니까 일단 주석처리)
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 
 # py 파일들 불러오기
+from ..config.jwt import *
 from ..config.test_database import SessionLocal
 from ..dto.memberDto import LoginRequest
 from ..entity import member
@@ -44,15 +38,6 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 # Naver STT key
 client_id = os.getenv("YOUR_CLIENT_ID")
 client_secret = os.getenv("YOUR_CLIENT_SECRET")
-
-# JWT 설정
-SECRET_KEY = os.getenv("SECRET_KEY", "your_secret_key")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
-# 비밀번호 관련
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")  # 비밀번호 해싱을 위한 설정
 
 # html 템플릿 관련
 # templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
@@ -76,41 +61,6 @@ memory = ConversationSummaryMemory(
     max_token_limit=200,  # 요약의 기준이 되는 토큰 길이를 설정합니다.
     return_messages=True,
 )
-
-def get_password_hash(password: str) -> str:
-    """
-    JWT : 비밀번호 해싱 함수
-    """
-    return pwd_context.hash(password)
-
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """
-    JWT : 비밀번호 검증 함수
-    """
-    return pwd_context.verify(plain_password, hashed_password)
-
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
-    """
-    JWT : 토큰 생성하기
-    """
-    to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta if expires_delta else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-    to_encode.update({"exp": expire})
-    return pyjwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
-def decode_access_token(token: str):
-    """
-    JWT : 토큰 디코드 하기
-    """
-    try:
-        payload = pyjwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return payload
-    except pyjwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired")
-    except pyjwt.JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-
 
 def get_db():
     """
