@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../config/app_config.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class RecordingService {
   final record = AudioRecorder();
@@ -64,7 +65,20 @@ class RecordingService {
   // responses 리스트 서버 전송
   Future<List<String>?> sendResponsesToServer() async {
     String url = "${AppConfig.apiBaseUrl}/generate_question";
-    String bearerToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXM0MjE0ZGFmdDEyMzQ1IiwiZXhwIjoxNzMxOTk4Mzk1fQ.TrpqVFz307fY5hpokFJpql1La2LMfPYC51BYvyyjCEY"; // Bearer Token 추가
+
+    final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+
+    Future<String?> getAccessToken() async {
+      return await _secureStorage.read(key: 'accessToken');
+    }
+
+    String? token = await getAccessToken();
+    if (token == null) {
+      print("Access Token이 없습니다.");
+      return null;
+    }
+
+    String bearerToken = "Bearer $token";
 
     if (responses.isEmpty) {
       print("responses 리스트가 비어 있습니다.");
