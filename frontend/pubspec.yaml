@@ -51,6 +51,7 @@ dependencies:
   flutter_secure_storage: ^9.2.2
   freezed: ^2.5.7
   build_runner: ^2.4.13
+  provider: ^6.0.5
 
 dev_dependencies:
   json_serializable: ^6.9.0

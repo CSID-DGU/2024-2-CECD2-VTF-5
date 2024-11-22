@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:vtfecho/model/question.dart';
 import '../services/recording_service.dart';
 
 class ChatWidget extends StatefulWidget {
@@ -95,7 +96,6 @@ class _ChatWidgetState extends State<ChatWidget> {
                               padding: const EdgeInsets.all(20),
                               child: Text(
                                 _recordingService.responses.join('\n'),
-                                // '답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!',
                                 style: TextStyle(
                                   fontFamily: 'nanum',
                                   fontSize: 30,
@@ -154,23 +154,8 @@ class _ChatWidgetState extends State<ChatWidget> {
                           children: [
                             GestureDetector(
                               onTap: () async{
-                                List<String>? questions = await _recordingService.sendResponsesToServer();
-                                if (questions != null && questions.isNotEmpty) {
-                                  // 질문 리스트 출력
-                                  String? question1 = questions.length > 0
-                                      ? questions[0]
-                                      : null;
-                                  String? question2 = questions.length > 1
-                                      ? questions[1]
-                                      : null;
-                                  String? question3 = questions.length > 2
-                                      ? questions[2]
-                                      : null;
-                                  print("Question 1: $question1 \nQuestion 2: $question1\nQuestion 3: $question3");
-                                }
-                                else {
-                                  print("질문을 받아오지 못했습니다.");
-                                }
+                                _recordingService.sendResponsesToServer();
+                                Get.toNamed('/question');
                               },
                               child: Icon(
                                 Icons.navigate_next_rounded,

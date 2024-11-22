@@ -6,12 +6,15 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../config/app_config.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../model/question.dart';
+import '../provider/question_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class RecordingService {
   final record = AudioRecorder();
   String? _recordingPath;
   bool _isRecording = false;
-  List<String> responses = ["자전거 타던 그때 기억이 생생하군요."]; // 서버로 전송할 응답 리스트
+  List<String> responses = []; // 서버로 전송할 응답 리스트
 
   bool get isRecording => _isRecording;
 
@@ -63,7 +66,7 @@ class RecordingService {
   }
 
   // responses 리스트 서버 전송
-  Future<List<String>?> sendResponsesToServer() async {
+  Future<List<Question>?> sendResponsesToServer() async {
     String url = "${AppConfig.apiBaseUrl}/generate_question";
 
     final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
@@ -103,7 +106,9 @@ class RecordingService {
         // 서버로부터 JSON 응답 파싱
         String decodedBody = utf8.decode(response.bodyBytes);
         Map<String, dynamic> responseBody = json.decode(decodedBody);
-        List<String> questions = List<String>.from(responseBody['questions'] ?? []);
+        List<Question> questions = (responseBody['questions'] as List)
+            .map((item) => Question.fromJson(item))
+            .toList();
         return questions;
       } else {
         print('responses 전송 실패: ${response.statusCode}');
@@ -113,4 +118,10 @@ class RecordingService {
     }
     return null;
   }
+  // responses 리스트 초기화 메서드
+  void clearResponses() {
+    this.responses = [];
+    print('responses 리스트가 초기화되었습니다.');
+  }
+
 }

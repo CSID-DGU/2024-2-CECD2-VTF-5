@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import '../services/recording_service.dart';
+import '../provider/question_provider.dart';
 
 class questionWidget extends StatefulWidget {
   const questionWidget({Key? key}) : super(key: key);
@@ -9,6 +12,8 @@ class questionWidget extends StatefulWidget {
 
 class _questionWidgetState extends State<questionWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
+
+  late RecordingService _recordingService;
 
   @override
   Widget build(BuildContext context) {
@@ -32,12 +37,18 @@ class _questionWidgetState extends State<questionWidget> {
                   ),
                 ),
                 _buildButton(context, '1. input', () {
+                  _recordingService.clearResponses();
+                  Get.toNamed('/chat');
                   print('1번 버튼이 클릭되었습니다.');
                 }),
                 _buildButton(context, '2. input', () {
+                  _recordingService.clearResponses();
+                  Get.toNamed('/chat');
                   print('2번 버튼이 클릭되었습니다.');
                 }),
                 _buildButton(context, '3. input', () {
+                  _recordingService.clearResponses();
+                  Get.toNamed('/chat');
                   print('3번 버튼이 클릭되었습니다.');
                 }),
               ],
