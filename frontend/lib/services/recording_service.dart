@@ -4,6 +4,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../config/app_config.dart';
 
 class RecordingService {
   final record = AudioRecorder();
@@ -42,7 +43,7 @@ class RecordingService {
   // 파일 서버 전송
   Future<String?> sendFileToServer(String filePath) async {
     File audioFile = File(filePath);
-    String url = "http://10.0.2.2:8000/stt";
+    String url = "${AppConfig.apiBaseUrl}/stt";
     var request = http.MultipartRequest('POST', Uri.parse(url));
     request.files.add(await http.MultipartFile.fromPath('recordFile', audioFile.path));
 
@@ -62,7 +63,7 @@ class RecordingService {
 
   // responses 리스트 서버 전송
   Future<List<String>?> sendResponsesToServer() async {
-    String url = "http://10.0.2.2:8000/generate_question";
+    String url = "${AppConfig.apiBaseUrl}/generate_question";
     String bearerToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXM0MjE0ZGFmdDEyMzQ1IiwiZXhwIjoxNzMxOTk4Mzk1fQ.TrpqVFz307fY5hpokFJpql1La2LMfPYC51BYvyyjCEY"; // Bearer Token 추가
 
     if (responses.isEmpty) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import "../config/app_config.dart";
 
 class SignupWidget extends StatefulWidget {
   const SignupWidget({Key? key}) : super(key: key);
@@ -52,7 +53,7 @@ class _SignupWidgetState extends State<SignupWidget> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:8000/signup'),
+        Uri.parse('${AppConfig.apiBaseUrl}/signup'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(signupData),
       );
@@ -60,7 +61,7 @@ class _SignupWidgetState extends State<SignupWidget> {
       if (response.statusCode == 200) {
         final decodedBody = utf8.decode(response.bodyBytes);
         final responseBody = jsonDecode(decodedBody);
-        print('회원가입 성공! JWT: ${responseBody['token']}');
+        print('회원가입 성공!');
       } else {
         final decodedBody = utf8.decode(response.bodyBytes);
         final errorResponse = jsonDecode(decodedBody);

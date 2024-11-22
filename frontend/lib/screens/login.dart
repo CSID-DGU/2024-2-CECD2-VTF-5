@@ -1,5 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
+import '../config/app_config.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../model/loginModel.dart';
 
 class LoginWidget extends StatefulWidget {
   const LoginWidget({super.key});
@@ -12,6 +16,7 @@ class _LoginWidgetState extends State<LoginWidget> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _idController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
   bool _passwordVisible = false;
   bool _keepLoggedIn = true;
 
@@ -20,6 +25,66 @@ class _LoginWidgetState extends State<LoginWidget> {
     _idController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _saveTokenToStorage(String accessToken) async {
+    final loginData = loginModel(accessToken: accessToken);
+    await _secureStorage.write(key: 'loginData', value: jsonEncode(loginData.toJson()));
+  }
+
+  Future<void> _login() async {
+    final String id = _idController.text;
+    final String password = _passwordController.text;
+
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    final url = Uri.parse('${AppConfig.apiBaseUrl}/login'); // 서버 URL
+    final body = jsonEncode({'login_id': id, 'password': password});
+    final headers = {'Content-Type': 'application/json'};
+
+    try {
+      final response = await http.post(url, body: body, headers: headers);
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+
+        if (responseData['access_token'] != null) {
+          final String accessToken = responseData['access_token'];
+
+          // Secure Storage에 토큰 저장
+          await _saveTokenToStorage(accessToken);
+
+          // 다음 화면으로 이동
+          Navigator.pushReplacementNamed(context, '/home'); // Replace '/home' with your target route name
+        } else {
+          _showError('로그인 실패. 다시 시도해주세요.');
+        }
+      } else {
+        _showError('로그인 실패. 다시 시도해주세요.');
+      }
+    } catch (e) {
+      _showError('네트워크 오류가 발생했습니다.');
+    }
+  }
+
+  void _showError(String message) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('오류'),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('확인'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -37,9 +102,8 @@ class _LoginWidgetState extends State<LoginWidget> {
                 Container(
                   width: double.infinity,
                   height: 150,
-
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween, // 요소를 양 끝과 가운데로 배치
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
@@ -58,7 +122,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                         ),
                       ),
                       Transform.rotate(
-                        angle: 3.14159, // 180도
+                        angle: 3.14159,
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: Image.asset(
@@ -70,7 +134,6 @@ class _LoginWidgetState extends State<LoginWidget> {
                       ),
                     ],
                   ),
-
                 ),
                 const SizedBox(height: 20),
                 // 로그인 제목
@@ -93,7 +156,6 @@ class _LoginWidgetState extends State<LoginWidget> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // 아이디 필드
                         const Text('아이디'),
                         const SizedBox(height: 8),
                         TextFormField(
@@ -105,11 +167,11 @@ class _LoginWidgetState extends State<LoginWidget> {
                             filled: true,
                             fillColor: Colors.white,
                           ),
-                          validator: (value) =>
-                          value == null || value.isEmpty ? '아이디를 입력하세요' : null,
+                          validator: (value) => value == null || value.isEmpty
+                              ? '아이디를 입력하세요'
+                              : null,
                         ),
                         const SizedBox(height: 24),
-                        // 비밀번호 필드
                         const Text('비밀번호'),
                         const SizedBox(height: 8),
                         TextFormField(
@@ -139,7 +201,6 @@ class _LoginWidgetState extends State<LoginWidget> {
                               : null,
                         ),
                         const SizedBox(height: 16),
-                        // 로그인 유지 체크박스
                         Row(
                           children: [
                             Checkbox(
@@ -158,14 +219,8 @@ class _LoginWidgetState extends State<LoginWidget> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                // 로그인 버튼
                 ElevatedButton(
-                  onPressed: () {
-                    Get.toNamed('/homePage');
-                    if (_formKey.currentState?.validate() ?? false) {
-                      print('로그인 성공');
-                    }
-                  },
+                  onPressed: _login,
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 50),
                     shape: RoundedRectangleBorder(
@@ -175,7 +230,6 @@ class _LoginWidgetState extends State<LoginWidget> {
                   child: const Text('로그인'),
                 ),
                 const SizedBox(height: 24),
-                // 카카오 로그인 버튼
                 ElevatedButton.icon(
                   onPressed: () {
                     print('카카오로 로그인');
@@ -197,36 +251,21 @@ class _LoginWidgetState extends State<LoginWidget> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // 회원가입 및 비밀번호 찾기
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     TextButton(
                       onPressed: () {
-                        Get.toNamed('/signup');
                         print('회원가입 클릭');
                       },
-                      child: const Text(
-                        '회원가입',
-                        style: TextStyle(
-                          decoration: TextDecoration.underline,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      child: const Text('회원가입'),
                     ),
                     const Text('|'),
                     TextButton(
                       onPressed: () {
-                        Get.toNamed('/lostPassword');
                         print('비밀번호 찾기 클릭');
                       },
-                      child: const Text(
-                        '비밀번호를 잊으셨나요?',
-                        style: TextStyle(
-                          decoration: TextDecoration.underline,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      child: const Text('비밀번호를 잊으셨나요?'),
                     ),
                   ],
                 ),
@@ -238,4 +277,3 @@ class _LoginWidgetState extends State<LoginWidget> {
     );
   }
 }
-
