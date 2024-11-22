@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:vtfecho/screens/chat.dart';
+import 'package:vtfecho/screens/explanation.dart';
 import 'package:vtfecho/screens/homePage.dart';
 import 'package:vtfecho/screens/loading.dart';
 import 'package:vtfecho/screens/login.dart';
@@ -28,6 +29,7 @@ class AppRoutes {
     GetPage(name: '/chat', page: () => ChatWidget()),
     GetPage(name: '/myPage', page: () => MyPageWidget()),
     GetPage(name: '/myAuto', page: () => MyAutoWidget()),
+    GetPage(name: '/explanation', page: () => ExplanationWidget()),
     GetPage(name: '/newPassword', page: () => NewPasswordWidget()),
     GetPage(name: '/question', page: ()=>questionWidget())
 

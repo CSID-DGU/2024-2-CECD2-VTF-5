@@ -32,6 +32,9 @@ class _ChatWidgetState extends State<ChatWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
@@ -45,30 +48,40 @@ class _ChatWidgetState extends State<ChatWidget> {
             children: [
               Container(
                 width: double.infinity,
-                height: 150,
+                height: screenHeight * 0.15,
                 decoration: BoxDecoration(
-                  color: Color(0xFFC3E5AE),
+                  color: Color(0xFFB1EBB3),
                   borderRadius: BorderRadius.only(
                     bottomLeft: Radius.circular(30),
                     bottomRight: Radius.circular(30),
+                    topLeft: Radius.circular(30),
+                    topRight: Radius.circular(30),
                   ),
                 ),
                 child: Row(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(left: 30),
-                      child: Image.asset('assets/icons/QuestionBoy.png',
-                        width: 70,height: 70,),
+                      padding: const EdgeInsets.only(left: 25),
+                      child: Image.asset('assets/images/stt.png',
+                        width: 70,height: 70,
+                      ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 20),
-                      child: Text(
-                        '그렇다면 작성자님은 어떤 이유로\n친구에게 소개팅을 주선했나요?',
-                        style: TextStyle(
-                          fontFamily: 'nanum',
-                          fontSize: 32,
-                          fontWeight: FontWeight.normal
-                        ),
+                    Expanded(
+                      child: Padding(
+                        // padding: const EdgeInsets.only(left: 20, right: 20),
+                        padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+                        child: SingleChildScrollView(
+                          child: Text(
+                            '그렇다면 작성자님은 어떤 이유로 친구에게 소개팅을 주선했나요? 질문길면 스크롤 질문길면 스크롤 질문길면 스크롤 질문길면 스크롤 질문길면 스크롤 ㅅㅋㄹㅅㅋㄹㅅㅋㄹ',
+                            style: TextStyle(
+                              fontFamily: 'Pretendard',
+                              fontSize: screenWidth * 0.05,
+                              fontWeight: FontWeight.w600
+                            ),
+                            softWrap: true,
+                            overflow: TextOverflow.visible,
+                          ),
+                        )
                       ),
                     ),
                   ],
@@ -89,7 +102,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                           Container(
                             width: double.infinity,
                             decoration: BoxDecoration(
-                              color: Color(0xFFFFBC8C),
+                              color: Color(0xFFFFCFAD),
                               borderRadius: BorderRadius.circular(30),
                             ),
                             child: Padding(
@@ -97,8 +110,9 @@ class _ChatWidgetState extends State<ChatWidget> {
                               child: Text(
                                 _recordingService.responses.join('\n'),
                                 style: TextStyle(
-                                  fontFamily: 'nanum',
-                                  fontSize: 30,
+                                  fontFamily: 'Pretendard',
+                                  fontSize: screenWidth * 0.05,
+                                  fontWeight: FontWeight.w500
                                 ),
                               ),
                             ),
@@ -140,8 +154,9 @@ class _ChatWidgetState extends State<ChatWidget> {
                               Text(
                                 '홈화면',
                                 style: TextStyle(
-                                  fontFamily: 'nanum',
-                                  fontSize: 16,
+                                  fontFamily: 'Pretendard',
+                                  fontSize: screenWidth * 0.04,
+                                  fontWeight: FontWeight.w500
                                 ),
                               ),
                             ],
@@ -166,8 +181,9 @@ class _ChatWidgetState extends State<ChatWidget> {
                             Text(
                               '다음질문',
                               style: TextStyle(
-                                fontFamily: 'nanum',
-                                fontSize: 16,
+                                fontFamily: 'Pretendard',
+                                fontSize: screenWidth * 0.04,
+                                fontWeight: FontWeight.w500
                               ),
                             ),
                           ],

@@ -35,15 +35,18 @@ class LoadingWidget extends StatelessWidget {
                             '내가 쓰는 자서전,',
                             style: TextStyle(
                               color: Colors.black,
+                              fontFamily: 'Pretendard',
                               fontSize: screenWidth * 0.06,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                           Text(
                             '메아리',
                            style: TextStyle(
                              color: Colors.black,
+                             fontFamily: 'Pretendard',
                              fontSize: screenWidth * 0.08,
-                             fontWeight: FontWeight.bold,
+                             fontWeight: FontWeight.w700,
                             ),
                           ),
                        ],
@@ -51,7 +54,7 @@ class LoadingWidget extends StatelessWidget {
                     ),
                     CircleAvatar(
                       backgroundImage: AssetImage('assets/images/LoadingEcho.gif'),
-                      backgroundColor: const Color.fromARGB(255, 164, 230, 166),
+                      backgroundColor: const Color(0xFFA4E6A6),
                       radius: screenWidth * 0.4,
                     ),
                   ],

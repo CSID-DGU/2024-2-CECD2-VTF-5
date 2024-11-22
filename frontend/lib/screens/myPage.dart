@@ -50,7 +50,7 @@ class _MyPageWidgetState extends State<MyPageWidget> {
                     child: const Text(
                       '안녕하세요!',
                       style: TextStyle(
-                        fontFamily: 'Inter',
+                        fontFamily: 'Pretendard',
                         fontSize: 30,
                         fontWeight: FontWeight.w800,
                       ),
@@ -64,7 +64,7 @@ class _MyPageWidgetState extends State<MyPageWidget> {
                     child: Text(
                       '개인 정보 수정',
                       style: TextStyle(
-                        fontFamily: 'Inter',
+                        fontFamily: 'Pretendard',
                         color: Colors.grey[700],
                       ),
                     ),
@@ -98,7 +98,7 @@ class _MyPageWidgetState extends State<MyPageWidget> {
                                 Text(
                                   '결혼 여부',
                                   style: const TextStyle(
-                                    fontFamily: 'Inter',
+                                    fontFamily: 'Pretendard',
                                     fontSize: 14,
                                   ),
                                 ),
@@ -130,7 +130,7 @@ class _MyPageWidgetState extends State<MyPageWidget> {
                                 Text(
                                   '자녀유무',
                                   style: const TextStyle(
-                                    fontFamily: 'Inter',
+                                    fontFamily: 'Pretendard',
                                     fontSize: 14,
                                   ),
                                 ),
@@ -170,7 +170,7 @@ class _MyPageWidgetState extends State<MyPageWidget> {
                     child: Text(
                       '기능 설정',
                       style: TextStyle(
-                        fontFamily: 'Inter',
+                        fontFamily: 'Pretendard',
                         color: Colors.grey[700],
                       ),
                     ),
@@ -196,8 +196,9 @@ class _MyPageWidgetState extends State<MyPageWidget> {
                             child: Text(
                               '비밀번호 변경',
                               style: TextStyle(
+                                fontFamily: 'Pretendard',
                                 decoration: TextDecoration.underline,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ),
@@ -213,7 +214,12 @@ class _MyPageWidgetState extends State<MyPageWidget> {
                         alignment: Alignment.centerLeft,
                         child: Padding(
                           padding: const EdgeInsets.fromLTRB(35, 0, 0, 0),
-                          child: const Text('목소리 변경'),
+                          child: const Text(
+                            '목소리 변경',
+                            style: TextStyle(
+                              fontFamily: 'Pretendard',
+                            ),
+                          ),
                         ),
                       ),
                       _buildVoiceSelection(),
@@ -237,14 +243,14 @@ class _MyPageWidgetState extends State<MyPageWidget> {
           Text(
             title,
             style: const TextStyle(
-              fontFamily: 'Inter',
+              fontFamily: 'Pretendard',
               fontSize: 14,
             ),
           ),
           Text(
             value,
             style: const TextStyle(
-              fontFamily: 'Inter',
+              fontFamily: 'Pretendard',
               fontSize: 14,
             ),
           ),
