@@ -76,9 +76,9 @@ class _MyAutoWidgetState extends State<MyAutoWidget> {
                           child: Text(
                           '***자 작성',
                           style: TextStyle(
-                            fontSize: screenWidth * 0.07,
+                            fontSize: screenWidth * 0.05,
                             color: Colors.black, // Replace with your desired text color
-                            fontFamily: 'nanum'
+                            // fontFamily: 'nanum'
                           ),
                         ),
                       ),
@@ -95,10 +95,10 @@ class _MyAutoWidgetState extends State<MyAutoWidget> {
                         child: Text(
                         '**개 질문 답변',
                           style: TextStyle(
-                            fontSize: screenWidth * 0.07,
+                            fontSize: screenWidth * 0.05,
                             color: Colors.black, // Replace with your desired text color
                             letterSpacing: 0.0,
-                            fontFamily: 'nanum'
+                            // fontFamily: 'nanum'
                           ),
                         ),
                       ),
