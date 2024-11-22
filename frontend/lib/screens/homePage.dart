@@ -41,9 +41,9 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                         child: Text(
                           '홈',
                           style: TextStyle(
-                            fontFamily: 'Inter Tight',
+                            fontFamily: 'Pretendard',
                             fontSize: screenWidth * 0.1,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
@@ -61,7 +61,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                     width: 300,
                     height: 190,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFA4E6A6),
+                      color: const Color(0xFFB1EBB3),
                       borderRadius: BorderRadius.circular(30),
                     ),
                     child: Row(
@@ -83,17 +83,17 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                             Text(
                               '자서전',
                               style: TextStyle(
-                                // fontFamily: 'nanum',
+                                fontFamily: 'Pretendard',
                                 fontSize: screenWidth * 0.06,
-                                fontWeight: FontWeight.bold
+                                fontWeight: FontWeight.w700
                               ),
                             ),
                             Text(
                               '만들러 가기',
                               style: TextStyle(
-                                // fontFamily: 'nanum',
+                                fontFamily: 'Pretendard',
                                 fontSize: screenWidth * 0.06,
-                                fontWeight: FontWeight.bold
+                                fontWeight: FontWeight.w700
                               ),
                             ),
                           ],
@@ -131,9 +131,9 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                           Text(
                             '나의 정보 보기',
                             style: TextStyle(
-                              // fontFamily: 'nanum',
+                              fontFamily: 'Pretendard',
                               fontSize: screenWidth * 0.06,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
@@ -170,9 +170,9 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                           Text(
                             '나의 자서전 보기',
                             style: TextStyle(
-                              // fontFamily: 'nanum',
+                              fontFamily: 'Pretendard',
                               fontSize: screenWidth * 0.06,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
@@ -182,35 +182,40 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.only(top: 10),
-                child: Container(
-                  width: 300,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFB0DCB2),
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: Center(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Image.asset(
-                          'assets/images/explanation.png',
-                          width: 70,
-                          height: 70,
-                        ),
-                        SizedBox(width: 5),
-                        Text(
-                          '설명 다시 보기',
-                          style: TextStyle(
-                            // fontFamily: 'nanum',
-                            fontSize: screenWidth * 0.06,
-                            fontWeight: FontWeight.bold,
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: InkWell(
+                  onTap: () {
+                    Get.toNamed('/explanation');
+                  },
+                  child: Container(
+                    width: 300,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFB0DCB2),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Center(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Image.asset(
+                            'assets/images/explanation.png',
+                            width: 70,
+                            height: 70,
                           ),
-                        ),
-                      ],
+                          SizedBox(width: 5),
+                          Text(
+                            '설명 다시 보기',
+                            style: TextStyle(
+                              fontFamily: 'Pretendard',
+                              fontSize: screenWidth * 0.06,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
