@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../model/loginModel.dart';
+import 'package:get/get.dart';
 
 class LoginWidget extends StatefulWidget {
   const LoginWidget({super.key});
@@ -40,7 +41,8 @@ class _LoginWidgetState extends State<LoginWidget> {
       return;
     }
 
-    final url = Uri.parse('${AppConfig.apiBaseUrl}/login'); // 서버 URL
+    final url = Uri.parse('${AppConfig.apiBaseUrl}/login');
+    print('${AppConfig.apiBaseUrl}/login');// 서버 URL
     final body = jsonEncode({'login_id': id, 'password': password});
     final headers = {'Content-Type': 'application/json'};
 
@@ -57,12 +59,12 @@ class _LoginWidgetState extends State<LoginWidget> {
           await _saveTokenToStorage(accessToken);
 
           // 다음 화면으로 이동
-          Navigator.pushReplacementNamed(context, '/home'); // Replace '/home' with your target route name
+          Navigator.pushReplacementNamed(context, '/homePage'); // Replace '/home' with your target route name
         } else {
-          _showError('로그인 실패. 다시 시도해주세요.');
+          _showError('토큰없음');
         }
       } else {
-        _showError('로그인 실패. 다시 시도해주세요.');
+        _showError('error ${response.statusCode}');
       }
     } catch (e) {
       _showError('네트워크 오류가 발생했습니다.');
@@ -256,7 +258,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                   children: [
                     TextButton(
                       onPressed: () {
-                        print('회원가입 클릭');
+                        Get.toNamed('/signup');
                       },
                       child: const Text('회원가입'),
                     ),

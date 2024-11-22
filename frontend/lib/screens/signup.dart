@@ -207,7 +207,7 @@ class _SignupWidgetState extends State<SignupWidget> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      Get.toNamed('/homePage');
+                      Get.toNamed('/login');
                       print('가입하기');
                       // 입력된 정보를 출력
                       print('아이디: ${_idController.text.trim()}');
