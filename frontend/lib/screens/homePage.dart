@@ -14,7 +14,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
@@ -36,8 +35,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                     children: [
                       Padding(
                         padding: const EdgeInsets.only(left: 50),
-                        // child: Image.asset('assets/icons/HomeIcon.png',
-                        //   width: 60,height: 60,),
                       ),
                       Padding(
                         padding: EdgeInsets.only(left: 30),
@@ -67,38 +64,40 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                       color: const Color(0xFFA4E6A6),
                       borderRadius: BorderRadius.circular(30),
                     ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.max,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Padding(
-                          padding: const EdgeInsets.only(left: 65, top: 20),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.max,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(top: 10),
-                                // child: Image.asset('assets/icons/QuestionBoy.png',
-                                //   width: 70,height: 70,),
-
-                              ),
-                              Text(
-                                ' 질문',
-                                style: TextStyle(
-                                  // fontFamily: 'nanum',
-                                  fontSize: screenWidth * 0.07,
-                                ),
-                              ),
-                            ],
+                          padding: EdgeInsets.only(right: 10),
+                          child: Image.asset(
+                            'assets/images/write_auto.png',
+                            width: 70,
+                            height: 70,
                           ),
                         ),
-                        Text(
-                          '만들러 가기',
-                          style: TextStyle(
-                            // fontFamily: 'nanum',
-                            fontSize: screenWidth * 0.07,
-                          ),
-                        ),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              '자서전',
+                              style: TextStyle(
+                                // fontFamily: 'nanum',
+                                fontSize: screenWidth * 0.06,
+                                fontWeight: FontWeight.bold
+                              ),
+                            ),
+                            Text(
+                              '만들러 가기',
+                              style: TextStyle(
+                                // fontFamily: 'nanum',
+                                fontSize: screenWidth * 0.06,
+                                fontWeight: FontWeight.bold
+                              ),
+                            ),
+                          ],
+                        )
                       ],
                     ),
                   ),
@@ -117,28 +116,24 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                       color: const Color(0xFFB0DCB2),
                       borderRadius: BorderRadius.circular(30),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 10, bottom: 5),
+                    child: Center(
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,  // 수평 중앙 배치
-                        crossAxisAlignment: CrossAxisAlignment.center, // 수직 중앙 배치
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Padding(
-                            padding: EdgeInsets.only(top: 5),
-                            // child: Icon(
-                            //   Icons.person_sharp,
-                            //   color: Colors.black,
-                            //   size: 50
-                            // ),
+                          Image.asset(
+                            'assets/images/mypage.png',
+                            width: 70,
+                            height: 70,
                           ),
-                          Padding(
-                            padding: EdgeInsets.only(left: 20),
-                            child: Text(
-                              '마이 페이지',
-                              style: TextStyle(
-                                // fontFamily: 'nanum',
-                                fontSize: screenWidth * 0.07,
-                              ),
+                          SizedBox(width: 5),
+                          Text(
+                            '나의 정보 보기',
+                            style: TextStyle(
+                              // fontFamily: 'nanum',
+                              fontSize: screenWidth * 0.06,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ],
@@ -160,28 +155,24 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                       color: const Color(0xFFB0DCB2),
                       borderRadius: BorderRadius.circular(30),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 10, bottom: 5),
+                    child: Center(
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,  // 수평 중앙 배치
-                        crossAxisAlignment: CrossAxisAlignment.center, // 수직 중앙 배치
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Padding(
-                            padding: EdgeInsets.only(left: 20),
-                            // child: Icon(
-                            //   Icons.person_sharp,
-                            //   color: Colors.black,
-                            //   size: 50
-                            // ),
+                          Image.asset(
+                            'assets/images/my_auto.png',
+                            width: 70,
+                            height: 70,
                           ),
-                          Padding(
-                            padding: EdgeInsets.only(left: 20),
-                            child: Text(
-                              '내 자서전 보기',
-                              style: TextStyle(
-                                // fontFamily: 'nanum',
-                                fontSize: screenWidth * 0.07,
-                              ),
+                          SizedBox(width: 5),
+                          Text(
+                            '나의 자서전 보기',
+                            style: TextStyle(
+                              // fontFamily: 'nanum',
+                              fontSize: screenWidth * 0.06,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ],
@@ -199,23 +190,24 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                     color: const Color(0xFFB0DCB2),
                     borderRadius: BorderRadius.circular(30),
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 10, bottom: 5),
+                  child: Center(
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,  // 수평 중앙 배치
-                      crossAxisAlignment: CrossAxisAlignment.center, // 수직 중앙 배치
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        // Image.asset('assets/icons/ExplainMan.png',
-                        //   width: 45,height: 45,),
-                        Padding(
-                          padding: EdgeInsets.only(left: 30),
-                          child: Text(
-                          '설명 다시보기',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              // fontFamily: 'nanum',
-                              fontSize: screenWidth * 0.07,
-                            ),
+                        Image.asset(
+                          'assets/images/explanation.png',
+                          width: 70,
+                          height: 70,
+                        ),
+                        SizedBox(width: 5),
+                        Text(
+                          '설명 다시 보기',
+                          style: TextStyle(
+                            // fontFamily: 'nanum',
+                            fontSize: screenWidth * 0.06,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ],
