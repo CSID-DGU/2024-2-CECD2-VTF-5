@@ -1,0 +1,21 @@
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore environment files
+.env
+
+# Ignore IDE files
+.idea/
+.vscode/
+
+# Ignore Docker-related files
+Dockerfile
+.dockerignore
+
+# Ignore database file (if not needed in container)
+*.db
+
+# Ignore frontend folder
+frontend/
