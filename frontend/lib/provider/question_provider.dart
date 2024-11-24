@@ -6,10 +6,6 @@ final questionProvider = StateNotifierProvider<QuestionNotifier, QuestionModel?>
       (ref) => QuestionNotifier()..fetchInitialData(), // 초기 데이터 로드
 );
 
-final recordingServiceProvider = Provider<RecordingService>((ref) {
-  return RecordingService(); // RecordingService 인스턴스 반환
-});
-
 class QuestionNotifier extends StateNotifier<QuestionModel?> {
   QuestionNotifier() : super(null);
 

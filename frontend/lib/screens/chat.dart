@@ -5,6 +5,7 @@ import 'package:vtfecho/model/question.dart';
 import '../services/recording_service.dart';
 import '../provider/question_provider.dart';
 import '../provider/responsesProvider.dart';
+import '../provider/recordingServiceProvider.dart';
 
 class ChatWidget extends ConsumerStatefulWidget {
   const ChatWidget({Key? key}) : super(key: key);

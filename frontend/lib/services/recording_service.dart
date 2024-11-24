@@ -21,6 +21,14 @@ class RecordingService {
 
   RecordingService(this.ref);
 
+  void clearResponses() {
+    ref.read(responsesProvider.notifier).clearResponses();
+  }
+
+  void addResponse(String response) {
+    ref.read(responsesProvider.notifier).addResponse(response);
+  }
+
   // 녹음 시작
   Future<void> startRecording() async {
     if (await record.hasPermission()) {
@@ -92,12 +100,16 @@ class RecordingService {
       return null;
     }
 
+    String sttInput = responses.join(" ");
+
     var headers = {
       "Content-Type": "application/json",
       "Authorization": "Bearer $bearerToken",
     };
 
-    var body = json.encode({"stt_input": responses.join(" ")});
+    var body = json.encode({"stt_input": sttInput});
+    print("Headers: $headers");
+    print("Body: $body");
 
     try {
       var response = await http.post(
@@ -106,20 +118,27 @@ class RecordingService {
         body: body,
       );
 
+      print("Response Status Code: ${response.statusCode}");
+      print("Response Headers: ${response.headers}");
+      print("Response Body: ${response.body}"); // 텍스트 응답 그대로 출력
+
       if (response.statusCode == 200) {
-        // 서버로부터 JSON 응답 파싱
-        String decodedBody = utf8.decode(response.bodyBytes);
-        Map<String, dynamic> responseBody = json.decode(decodedBody);
-        List<QuestionModel> questions = (responseBody['questions'] as List)
-            .map((item) => QuestionModel.fromJson(item))
-            .toList();
-        return questions;
+        // 성공 시 단순 텍스트 응답 처리
+        String responseBody = utf8.decode(response.bodyBytes);
+        print("Success Response: $responseBody");
+        // 필요하다면 텍스트를 화면에 표시하거나 로직에 활용
       } else {
-        print('responses 전송 실패: ${response.statusCode}');
+        // 오류 시 텍스트 응답 처리
+        String errorBody = utf8.decode(response.bodyBytes);
+        print("Error Response Body: $errorBody");
+
       }
     } catch (e) {
-      print('에러: $e');
+      // 네트워크 요청 또는 기타 예외 처리
+      print("Request failed with exception: $e");
+
     }
+
     return null;
   }
 }

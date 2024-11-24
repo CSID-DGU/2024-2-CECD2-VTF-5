@@ -3,13 +3,15 @@ import 'package:get/get.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/recording_service.dart';
 import '../provider/question_provider.dart';
+import '../provider/responseNotifier.dart';
+import '../provider/recordingServiceProvider.dart';
 
 class QuestionWidget extends ConsumerWidget {
   const QuestionWidget({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final RecordingService recordingService = RecordingService();
+    final recordingService = ref.read(recordingServiceProvider);
     final questionNotifier = ref.read(questionProvider.notifier);
     final selectedIndex = ref.watch(questionProvider.notifier).selectedIndex;
 
