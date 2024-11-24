@@ -1,11 +1,13 @@
-class Question {
-  final String text;
+import 'package:flutter/foundation.dart';
 
-  Question({required this.text});
+class QuestionModel {
+  final List<String> questions;
 
-  factory Question.fromJson(Map<String, dynamic> json) {
-    return Question(
-      text: json['text'] as String,
+  QuestionModel({required this.questions});
+
+  factory QuestionModel.fromJson(Map<String, dynamic> json) {
+    return QuestionModel(
+      questions: List<String>.from(json['questions']),
     );
   }
 }

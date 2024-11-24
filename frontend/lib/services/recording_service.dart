@@ -34,10 +34,10 @@ class RecordingService {
     _recordingPath = await record.stop();
     _isRecording = false;
     if (_recordingPath != null) {
-      String? responseBody = await sendFileToServer(_recordingPath!);
-      if (responseBody != null) {
-        responses.add(responseBody);
-        print('서버 응답: $responseBody');
+      Map<String,dynamic>? responseBody = await sendFileToServer(_recordingPath!);
+      if (responseBody != null && responseBody.containsKey('text')) {
+        responses.add(responseBody['text']);
+        print('서버 응답: ${responseBody['text']}');
       } else {
         print('서버 응답 없음 또는 실패');
       }
@@ -45,7 +45,7 @@ class RecordingService {
   }
 
   // 파일 서버 전송
-  Future<String?> sendFileToServer(String filePath) async {
+  Future<Map<String,dynamic>?> sendFileToServer(String filePath) async {
     File audioFile = File(filePath);
     String url = "${AppConfig.apiBaseUrl}/stt";
     var request = http.MultipartRequest('POST', Uri.parse(url));
@@ -55,7 +55,7 @@ class RecordingService {
       var response = await request.send();
       if (response.statusCode == 200) {
         final responseBody = await response.stream.bytesToString();
-        return responseBody;
+        return jsonDecode(responseBody);
       } else {
         print('파일 업로드 실패: ${response.statusCode}');
       }
@@ -66,7 +66,7 @@ class RecordingService {
   }
 
   // responses 리스트 서버 전송
-  Future<List<Question>?> sendResponsesToServer() async {
+  Future<List<QuestionModel>?> sendResponsesToServer() async {
     String url = "${AppConfig.apiBaseUrl}/generate_question";
 
     final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
@@ -106,8 +106,8 @@ class RecordingService {
         // 서버로부터 JSON 응답 파싱
         String decodedBody = utf8.decode(response.bodyBytes);
         Map<String, dynamic> responseBody = json.decode(decodedBody);
-        List<Question> questions = (responseBody['questions'] as List)
-            .map((item) => Question.fromJson(item))
+        List<QuestionModel> questions = (responseBody['questions'] as List)
+            .map((item) => QuestionModel.fromJson(item))
             .toList();
         return questions;
       } else {
@@ -119,6 +119,9 @@ class RecordingService {
     return null;
   }
   // responses 리스트 초기화 메서드
+
+
+
   void clearResponses() {
     this.responses = [];
     print('responses 리스트가 초기화되었습니다.');
