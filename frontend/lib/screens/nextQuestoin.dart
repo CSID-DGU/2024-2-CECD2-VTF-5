@@ -16,6 +16,12 @@ class _nextquestionWidgetState extends State<nextquestionWidget> {
   late RecordingService _recordingService;
 
   @override
+  void initState() {
+    super.initState();
+    _recordingService = RecordingService();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
@@ -30,9 +36,11 @@ class _nextquestionWidgetState extends State<nextquestionWidget> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 _buildButton(context, '유사한\n질문받기', () {
+                  _recordingService.sendResponsesToServer();
                   Get.toNamed('/question');
                 }),
                 _buildButton(context, '다른\n질문받기', () {
+                  _recordingService.sendResponsesToServer();
                   Get.toNamed('/question');
                 }),
                 _buildButton(context, '답변\n계속하기', () {

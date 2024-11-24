@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:io';
 import 'package:record/record.dart';
 import 'package:path/path.dart' as p;
@@ -7,16 +8,18 @@ import 'dart:convert';
 import '../config/app_config.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../model/question.dart';
-import '../provider/question_provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../provider/responsesProvider.dart';
 
 class RecordingService {
   final record = AudioRecorder();
   String? _recordingPath;
   bool _isRecording = false;
-  List<String> responses = []; // 서버로 전송할 응답 리스트
 
   bool get isRecording => _isRecording;
+
+  final Ref ref; // Ref를 추가합니다.
+
+  RecordingService(this.ref);
 
   // 녹음 시작
   Future<void> startRecording() async {
@@ -34,9 +37,9 @@ class RecordingService {
     _recordingPath = await record.stop();
     _isRecording = false;
     if (_recordingPath != null) {
-      Map<String,dynamic>? responseBody = await sendFileToServer(_recordingPath!);
+      Map<String, dynamic>? responseBody = await sendFileToServer(_recordingPath!);
       if (responseBody != null && responseBody.containsKey('text')) {
-        responses.add(responseBody['text']);
+        ref.read(responsesProvider.notifier).addResponse(responseBody['text']);
         print('서버 응답: ${responseBody['text']}');
       } else {
         print('서버 응답 없음 또는 실패');
@@ -45,7 +48,7 @@ class RecordingService {
   }
 
   // 파일 서버 전송
-  Future<Map<String,dynamic>?> sendFileToServer(String filePath) async {
+  Future<Map<String, dynamic>?> sendFileToServer(String filePath) async {
     File audioFile = File(filePath);
     String url = "${AppConfig.apiBaseUrl}/stt";
     var request = http.MultipartRequest('POST', Uri.parse(url));
@@ -72,7 +75,7 @@ class RecordingService {
     final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
     Future<String?> getAccessToken() async {
-      return await _secureStorage.read(key: 'accessToken');
+      return await _secureStorage.read(key: 'loginData');
     }
 
     String? token = await getAccessToken();
@@ -83,6 +86,7 @@ class RecordingService {
 
     String bearerToken = "Bearer $token";
 
+    final responses = ref.read(responsesProvider);
     if (responses.isEmpty) {
       print("responses 리스트가 비어 있습니다.");
       return null;
@@ -93,7 +97,7 @@ class RecordingService {
       "Authorization": "Bearer $bearerToken",
     };
 
-    var body = json.encode({"stt_input": responses.join("\n")});
+    var body = json.encode({"stt_input": responses.join(" ")});
 
     try {
       var response = await http.post(
@@ -118,13 +122,4 @@ class RecordingService {
     }
     return null;
   }
-  // responses 리스트 초기화 메서드
-
-
-
-  void clearResponses() {
-    this.responses = [];
-    print('responses 리스트가 초기화되었습니다.');
-  }
-
 }

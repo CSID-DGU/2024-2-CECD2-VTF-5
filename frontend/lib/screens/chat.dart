@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:vtfecho/model/question.dart';
 import '../services/recording_service.dart';
 import '../provider/question_provider.dart';
+import '../provider/responsesProvider.dart';
 
 class ChatWidget extends ConsumerStatefulWidget {
   const ChatWidget({Key? key}) : super(key: key);
@@ -23,7 +24,11 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
   void initState() {
     super.initState();
     _model = ChatModel();
-    _recordingService = RecordingService();
+  }
+
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _recordingService = ref.read(recordingServiceProvider);
   }
 
   @override
@@ -40,6 +45,8 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
     // Provider에서 선택된 질문 가져오기
     final questionNotifier = ref.read(questionProvider.notifier);
     final selectedQuestion = questionNotifier.getSelectedQuestion() ?? '질문이 선택되지 않았습니다.';
+
+    final responses = ref.watch(responsesProvider);
 
 
     return GestureDetector(
@@ -115,7 +122,7 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                             child: Padding(
                               padding: const EdgeInsets.all(20),
                               child: Text(
-                                _recordingService.responses.join('\n'),
+                                responses.join('\n'),
                                 style: TextStyle(
                                   fontFamily: 'Pretendard',
                                   fontSize: screenWidth * 0.05,
@@ -176,7 +183,6 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                           children: [
                             GestureDetector(
                               onTap: () async{
-                                _recordingService.sendResponsesToServer();
                                 Get.toNamed('/nextQuestoin');
                               },
                               child: Icon(

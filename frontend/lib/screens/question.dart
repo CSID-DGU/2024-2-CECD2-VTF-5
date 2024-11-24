@@ -84,9 +84,7 @@ class QuestionWidget extends ConsumerWidget {
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          backgroundColor: isSelected
-              ? const Color(0xFF82C3E5) // 선택된 버튼 색상
-              : const Color(0xFFC3E5AE), // 기본 버튼 색상
+          backgroundColor: const Color(0xFFC3E5AE), // 기본 버튼 색상
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),
