@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
 import 'package:vtfecho/model/question.dart';
 import '../services/recording_service.dart';
+import '../provider/question_provider.dart';
 
-class ChatWidget extends StatefulWidget {
+class ChatWidget extends ConsumerStatefulWidget {
   const ChatWidget({Key? key}) : super(key: key);
 
   @override
-  State<ChatWidget> createState() => _ChatWidgetState();
+  ConsumerState<ChatWidget> createState() => _ChatWidgetState();
 }
 
-class _ChatWidgetState extends State<ChatWidget> {
+class _ChatWidgetState extends ConsumerState<ChatWidget> {
   late ChatModel _model;
   late RecordingService _recordingService;
   bool isRecording = false;
@@ -34,6 +36,11 @@ class _ChatWidgetState extends State<ChatWidget> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
+
+    // Provider에서 선택된 질문 가져오기
+    final questionNotifier = ref.read(questionProvider.notifier);
+    final selectedQuestion = questionNotifier.getSelectedQuestion() ?? '질문이 선택되지 않았습니다.';
+
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
@@ -72,9 +79,9 @@ class _ChatWidgetState extends State<ChatWidget> {
                         padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
                         child: SingleChildScrollView(
                           child: Text(
-                            '그렇다면 작성자님은 어떤 이유로 친구에게 소개팅을 주선했나요? 질문길면 스크롤 질문길면 스크롤 질문길면 스크롤 질문길면 스크롤 질문길면 스크롤 ㅅㅋㄹㅅㅋㄹㅅㅋㄹ',
+                            selectedQuestion,
                             style: TextStyle(
-                              fontFamily: 'Pretendard',
+                              fontFamily: 'nanum',
                               fontSize: screenWidth * 0.05,
                               fontWeight: FontWeight.w600
                             ),
@@ -170,7 +177,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                             GestureDetector(
                               onTap: () async{
                                 _recordingService.sendResponsesToServer();
-                                Get.toNamed('/question');
+                                Get.toNamed('/nextQuestoin');
                               },
                               child: Icon(
                                 Icons.navigate_next_rounded,

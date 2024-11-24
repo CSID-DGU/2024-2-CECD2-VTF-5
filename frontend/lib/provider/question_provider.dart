@@ -1,24 +1,43 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../model/question.dart';
+import '../services/recording_service.dart';
 
 final questionProvider = StateNotifierProvider<QuestionNotifier, QuestionModel?>(
-      (ref) => QuestionNotifier(),
+      (ref) => QuestionNotifier()..fetchInitialData(), // 초기 데이터 로드
 );
+
+final recordingServiceProvider = Provider<RecordingService>((ref) {
+  return RecordingService(); // RecordingService 인스턴스 반환
+});
 
 class QuestionNotifier extends StateNotifier<QuestionModel?> {
   QuestionNotifier() : super(null);
 
-  // 서버에서 데이터를 받아와 모델에 저장
-  Future<void> fetchQuestions(Map<String, dynamic> jsonData) async {
-    final model = QuestionModel.fromJson(jsonData);
-    state = model;
+  int? _selectedIndex;
+  int? get selectedIndex => _selectedIndex;
+
+  void fetchInitialData() {
+    state = QuestionModel(questions: [
+      "질문 1",
+      "질문 2",
+      "질문 3",
+    ]);
   }
 
-  // 특정 번호의 질문을 선택
+  void selectQuestion(int index){
+    _selectedIndex=index;
+  }
+
+  String? getSelectedQuestion() {
+    if (state == null || _selectedIndex == null) return null;
+    return getQuestion(_selectedIndex!);
+  }
+
   String getQuestion(int index) {
-    if (state == null || index < 0 || index >= (state?.questions.length ?? 0)) {
-      return '질문이 없습니다.';
+    if (state == null || index < 0 || index >= state!.questions.length) {
+      return "질문이 없습니다.";
     }
     return state!.questions[index];
   }
 }
+

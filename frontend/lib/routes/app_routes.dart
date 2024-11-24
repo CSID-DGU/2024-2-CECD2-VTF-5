@@ -12,6 +12,7 @@ import 'package:vtfecho/screens/verificationCode.dart';
 import '../screens/myPage.dart';
 import '../screens/newPassword.dart';
 import '../screens/question.dart';
+import '../screens/nextQuestoin.dart';
 
 // loading -> login -> (회원가입 클릭시) signup -> homePage -> 
 // loading -> login -> (로그인버튼 클릭시) homePage
@@ -31,7 +32,9 @@ class AppRoutes {
     GetPage(name: '/myAuto', page: () => MyAutoWidget()),
     GetPage(name: '/explanation', page: () => ExplanationWidget()),
     GetPage(name: '/newPassword', page: () => NewPasswordWidget()),
-    GetPage(name: '/question', page: ()=>questionWidget())
+    GetPage(name: '/question', page: ()=>QuestionWidget()),
+    GetPage(name: '/nextQuestoin', page: ()=>nextquestionWidget()),
+
 
   ];
 }
