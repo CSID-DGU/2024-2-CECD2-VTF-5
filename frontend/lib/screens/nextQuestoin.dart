@@ -15,11 +15,7 @@ class _nextquestionWidgetState extends State<nextquestionWidget> {
 
   late RecordingService _recordingService;
 
-  @override
-  void initState() {
-    super.initState();
-    _recordingService = RecordingService();
-  }
+
 
   @override
   Widget build(BuildContext context) {
