@@ -3,13 +3,9 @@ import '../model/question.dart';
 import '../services/recording_service.dart';
 import './recordingServiceProvider.dart';
 
-final questionProvider =
-StateNotifierProvider<QuestionNotifier, QuestionModel?>((ref) {
-  final questionNotifier = QuestionNotifier(ref);
-  questionNotifier.fetchInitialData(); // 초기 데이터를 비동기로 가져옵니다.
-  return questionNotifier;
-});
-
+final questionProvider = StateNotifierProvider<QuestionNotifier, QuestionModel?>(
+      (ref) => QuestionNotifier(ref)..fetchInitialData(),
+);
 
 class QuestionNotifier extends StateNotifier<QuestionModel?> {
   final Ref ref;
@@ -22,7 +18,9 @@ class QuestionNotifier extends StateNotifier<QuestionModel?> {
   int? get selectedIndex => _selectedIndex;
 
   Future<void> fetchInitialData() async {
-    print("fetchInitialData() 호출됨"); // 확인 로그
+    print("fetchInitialData() 호출됨"); // 초기화 로그
+    print("Updated State in Provider: ${state?.questions}"); // 상태 업데이트 로그
+    // 확인 로그
     try {
       // recordingService를 사용해 서버에서 데이터 가져오기
       final recordingService = ref.read(recordingServiceProvider);
