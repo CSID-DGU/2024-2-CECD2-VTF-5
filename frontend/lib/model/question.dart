@@ -5,9 +5,9 @@ class QuestionModel {
 
   QuestionModel({required this.questions});
 
-  factory QuestionModel.fromJson(Map<String, dynamic> json) {
+  factory QuestionModel.fromList(List<dynamic> jsonList) {
     return QuestionModel(
-      questions: List<String>.from(json['questions']),
+      questions: List<String>.from(jsonList),
     );
   }
 }
