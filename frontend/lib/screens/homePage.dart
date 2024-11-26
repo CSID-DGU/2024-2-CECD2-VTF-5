@@ -34,15 +34,20 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Padding(
-                        padding: const EdgeInsets.only(left: 50),
+                        padding: const EdgeInsets.only(left: 70, top: 10),
+                        child: Image.asset(
+                          'assets/icons/HomeIcon.png',
+                          width: 40,
+                          height: 40,
+                        ),
                       ),
                       Padding(
-                        padding: EdgeInsets.only(left: 30),
+                        padding: EdgeInsets.only(left: 20),
                         child: Text(
                           '홈',
                           style: TextStyle(
-                            fontFamily: 'Pretendard',
-                            fontSize: screenWidth * 0.1,
+                            fontFamily: 'nanum',
+                            fontSize: screenWidth * 0.15,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -83,21 +88,22 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                             Text(
                               '자서전',
                               style: TextStyle(
-                                fontFamily: 'Pretendard',
-                                fontSize: screenWidth * 0.06,
+                                fontFamily: 'nanum',
+                                fontSize: screenWidth * 0.09,
                                 fontWeight: FontWeight.w700
                               ),
                             ),
                             Text(
                               '만들러 가기',
                               style: TextStyle(
-                                fontFamily: 'Pretendard',
-                                fontSize: screenWidth * 0.06,
+                                fontFamily: 'nanum',
+                                fontSize: screenWidth * 0.09,
                                 fontWeight: FontWeight.w700
                               ),
                             ),
                           ],
-                        )
+                        ),
+                        SizedBox(width: 15),
                       ],
                     ),
                   ),
@@ -127,15 +133,16 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                             width: 70,
                             height: 70,
                           ),
-                          SizedBox(width: 5),
+                          // SizedBox(width: 5),
                           Text(
                             '나의 정보 보기',
                             style: TextStyle(
-                              fontFamily: 'Pretendard',
-                              fontSize: screenWidth * 0.06,
+                              fontFamily: 'nanum',
+                              fontSize: screenWidth * 0.09,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
+                          SizedBox(width: 15),
                         ],
                       ),
                     ),
@@ -166,15 +173,16 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                             width: 70,
                             height: 70,
                           ),
-                          SizedBox(width: 5),
+                          // SizedBox(width: 5),
                           Text(
                             '나의 자서전 보기',
                             style: TextStyle(
-                              fontFamily: 'Pretendard',
-                              fontSize: screenWidth * 0.06,
+                              fontFamily: 'nanum',
+                              fontSize: screenWidth * 0.09,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
+                          SizedBox(width: 15),
                         ],
                       ),
                     ),
@@ -205,15 +213,15 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                             width: 70,
                             height: 70,
                           ),
-                          SizedBox(width: 5),
                           Text(
                             '설명 다시 보기',
                             style: TextStyle(
-                              fontFamily: 'Pretendard',
-                              fontSize: screenWidth * 0.06,
+                              fontFamily: 'nanum',
+                              fontSize: screenWidth * 0.09,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
+                          SizedBox(width: 15),
                         ],
                       ),
                     ),

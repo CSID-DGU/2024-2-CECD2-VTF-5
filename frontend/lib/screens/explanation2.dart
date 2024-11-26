@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class ExplanationWidget extends StatefulWidget {
-  const ExplanationWidget({super.key});
+class Explanation2Widget extends StatefulWidget {
+  const Explanation2Widget({super.key});
 
   @override
-  State<ExplanationWidget> createState() => _ExplanationWidgetState();
+  State<Explanation2Widget> createState() => _Explanation2WidgetState();
 }
 
-class _ExplanationWidgetState extends State<ExplanationWidget> {
+class _Explanation2WidgetState extends State<Explanation2Widget> {
   // GlobalKey 추가
-  final GlobalKey _sttImageKey = GlobalKey();
   final GlobalKey _listeningImageKey = GlobalKey();
-  final GlobalKey _responseBoxKey = GlobalKey();
+  final GlobalKey _homeIconKey = GlobalKey();
+  final GlobalKey _nextIconKey = GlobalKey();
   // 이미지 위치
-  Offset? _sttImagePosition; 
   Offset? _listeningImagePosition;
-  Offset? _responseBoxPosition;
+  Offset? _homeIconPosition;
+  Offset? _nextIconPosition;
 
   @override
   void initState() {
@@ -28,20 +28,20 @@ class _ExplanationWidgetState extends State<ExplanationWidget> {
 
   // 이미지나 박스 위치 계산
   void _getPositions() {
-    final RenderBox? sttRenderBox =
-        _sttImageKey.currentContext?.findRenderObject() as RenderBox?;
     final RenderBox? listeningRenderBox =
         _listeningImageKey.currentContext?.findRenderObject() as RenderBox?;
-    final RenderBox? responseRenderBox =
-        _responseBoxKey.currentContext?.findRenderObject() as RenderBox?;
+    final RenderBox? homeRenderBox =
+        _homeIconKey.currentContext?.findRenderObject() as RenderBox?;
+    final RenderBox? nextRenderBox =
+        _nextIconKey.currentContext?.findRenderObject() as RenderBox?;
 
     setState(() {
-      _sttImagePosition = sttRenderBox?.localToGlobal(Offset.zero);
       _listeningImagePosition = listeningRenderBox?.localToGlobal(Offset.zero);
-      _responseBoxPosition = responseRenderBox?.localToGlobal(Offset.zero);
-      print("stt 이미지 위치: $_sttImagePosition");
       print("listening 이미지 위치: $_listeningImagePosition");
-      print("response 박스 위치: $_responseBoxPosition");
+      _homeIconPosition = homeRenderBox?.localToGlobal(Offset.zero);
+      print("home 아이콘 위치: $_homeIconPosition");
+      _nextIconPosition = nextRenderBox?.localToGlobal(Offset.zero);
+      print("next 아이콘 위치: $_nextIconPosition");
     });
   }
 
@@ -52,7 +52,7 @@ class _ExplanationWidgetState extends State<ExplanationWidget> {
 
     return GestureDetector(
       onTap: () {
-        Get.toNamed('/explanation2');
+        Get.toNamed('/homePage');
       },
       child: Scaffold(
         backgroundColor: Colors.white,
@@ -81,7 +81,6 @@ class _ExplanationWidgetState extends State<ExplanationWidget> {
                         Padding(
                           padding: const EdgeInsets.only(left: 25),
                           child: Image.asset('assets/images/stt.png',
-                          key: _sttImageKey, // 이미지에 GlobalKey 할당
                           width: screenWidth * 0.18 ,height: screenHeight * 0.18,
                           ),
                         ),
@@ -109,7 +108,6 @@ class _ExplanationWidgetState extends State<ExplanationWidget> {
                             borderRadius: BorderRadius.circular(30),
                           ),
                           child: Container(
-                            key: _responseBoxKey,
                             width: double.infinity,
                             decoration: BoxDecoration(
                               color: Color(0xFFFFCFAD),
@@ -134,7 +132,7 @@ class _ExplanationWidgetState extends State<ExplanationWidget> {
                       ClipRRect(
                         borderRadius: BorderRadius.circular(24),
                         child: Image.asset(
-                          'assets/images/Listening2.png',
+                          'assets/images/Listening.png',
                           key: _listeningImageKey,
                           width: 100,
                           height: 100,
@@ -152,6 +150,7 @@ class _ExplanationWidgetState extends State<ExplanationWidget> {
                                   Icons.home,
                                   color: Colors.black,
                                   size: 24,
+                                  key: _homeIconKey,
                                 ),
                                 Text(
                                   '홈화면',
@@ -173,6 +172,7 @@ class _ExplanationWidgetState extends State<ExplanationWidget> {
                                     Icons.navigate_next_rounded,
                                     color: Colors.black,
                                     size: 24,
+                                    key: _nextIconKey,
                                   ),
                                 ),
                                 Text(
@@ -195,18 +195,12 @@ class _ExplanationWidgetState extends State<ExplanationWidget> {
               Container(
                 color: Colors.black.withOpacity(0.15),
               ),
-              // stt 이미지 설명
-              if (_sttImagePosition != null)
+              if (_listeningImagePosition != null)
                 Positioned(
-                  top: _sttImagePosition!.dy + 40,
-                  left: _sttImagePosition!.dx + 20,
+                  top: _listeningImagePosition!.dy - 170,
+                  left: _listeningImagePosition!.dx - 130,
                   child: Column(
                     children: [
-                      Icon(
-                        Icons.arrow_downward,
-                        color: Colors.black,
-                        size: 30,
-                      ),
                       Container(
                         padding: EdgeInsets.all(8),
                         decoration: BoxDecoration(
@@ -214,7 +208,7 @@ class _ExplanationWidgetState extends State<ExplanationWidget> {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          '왼쪽 버튼을 누르면 질문을 소리로 들을 수 있어요.\n질문이 잘려서 안보이신다면\n손가락으로 질문을 위로 쓸어보세요! ',
+                          '이 버튼을 누르면 다음과 같이 테두리가 사라집니다.\n답변을 시작해주세요!',
                           style: TextStyle(
                             color: Colors.black,
                             fontFamily: 'Pretendard',
@@ -222,73 +216,78 @@ class _ExplanationWidgetState extends State<ExplanationWidget> {
                             fontWeight: FontWeight.w700
                           ),
                           textAlign: TextAlign.center,
-                        )
+                        ),
+                      ),
+                      Icon(
+                        Icons.arrow_upward,
+                        color: Colors.black,
+                        size: 30,
                       ),
                     ],
                   ),
                 ),
-                if (_listeningImagePosition != null)
-                  Positioned(
-                    top: _listeningImagePosition!.dy - 170,
-                    left: _listeningImagePosition!.dx - 15,
-                    child: Column(
-                      children: [
-                        Container(
-                          padding: EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            '이 버튼을 눌러\n답변을 해주세요.',
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontFamily: 'Pretendard',
-                              fontSize: screenWidth * 0.04,
-                              fontWeight: FontWeight.w700
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
+                if (_homeIconPosition != null)
+                Positioned(
+                  top: _homeIconPosition!.dy - 160,
+                  left: _homeIconPosition!.dx - 25,
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                        Icon(
-                          Icons.arrow_upward,
-                          color: Colors.black,
-                          size: 30,
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (_responseBoxPosition != null)
-                    Positioned(
-                      top: _listeningImagePosition!.dy - 375,
-                      left: _listeningImagePosition!.dx - 100 ,
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.arrow_downward,
+                        child: Text(
+                          '이 버튼을 눌러\n홈화면으로\n이동할 수 있어요.',
+                          style: TextStyle(
                             color: Colors.black,
-                            size: 30,
+                            fontFamily: 'Pretendard',
+                            fontSize: screenWidth * 0.04,
+                            fontWeight: FontWeight.w700
                           ),
-                          Container(
-                            padding: EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              '말풍선을 눌러\n 작가님의 답변을 글자로도 입력 가능해요.',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontFamily: 'Pretendard',
-                                fontSize: screenWidth * 0.04,
-                                fontWeight: FontWeight.w700
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ],
+                          textAlign: TextAlign.center,
+                        ),
                       ),
-                    ),
+                      // Icon(
+                      //   Icons.arrow_upward,
+                      //   color: Colors.black,
+                      //   size: 30,
+                      // ),
+                    ],
+                  ),
+                ),
+                if (_nextIconPosition != null)
+                Positioned(
+                  top: _nextIconPosition!.dy - 160,
+                  left: _nextIconPosition!.dx - 60,
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '이 버튼을 눌러\n다음 질문을\n생성해보세요.',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontFamily: 'Pretendard',
+                            fontSize: screenWidth * 0.04,
+                            fontWeight: FontWeight.w700
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      // Icon(
+                      //   Icons.arrow_upward,
+                      //   color: Colors.black,
+                      //   size: 30,
+                      // ),
+                    ],
+                  ),
+                ),
             ],
           )
         ),
