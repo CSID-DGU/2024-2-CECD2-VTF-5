@@ -90,7 +90,7 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                             selectedQuestion,
                             style: TextStyle(
                               fontFamily: 'nanum',
-                              fontSize: screenWidth * 0.05,
+                              fontSize: screenWidth * 0.08,
                               fontWeight: FontWeight.w600
                             ),
                             softWrap: true,
@@ -169,9 +169,9 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                               Text(
                                 '홈화면',
                                 style: TextStyle(
-                                  fontFamily: 'Pretendard',
-                                  fontSize: screenWidth * 0.04,
-                                  fontWeight: FontWeight.w500
+                                  fontFamily: 'nanum',
+                                  fontSize: screenWidth * 0.06,
+                                  fontWeight: FontWeight.w600
                                 ),
                               ),
                             ],
@@ -195,9 +195,9 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                             Text(
                               '다음질문',
                               style: TextStyle(
-                                fontFamily: 'Pretendard',
-                                fontSize: screenWidth * 0.04,
-                                fontWeight: FontWeight.w500
+                                fontFamily: 'nanum',
+                                fontSize: screenWidth * 0.06,
+                                fontWeight: FontWeight.w600
                               ),
                             ),
                           ],
