@@ -263,50 +263,50 @@ def calculate_age(birth_date: str) -> int:
 
 
 @app.post("/complete")
-def process_autobiography(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+def process_autobiography_with_length(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     """
-    완성된 자서전 텍스트를 요약하여 반환
-    사용자 정보와 요약 내용을 가져옴
+    완성된 자서전 텍스트를 요약하여 반환하고 content와 글자 수를 함께 반환
     """
-    print(f"Received token: {token}")  # 받은 토큰 출력
     try:
-        # 토큰을 디코드하여 사용자 정보 추출
+        # 기존 처리 내용
         decoded_token = decode_access_token(token)
-        user_id = decoded_token.get("sub")  # JWT payload에서 'sub' 필드가 사용자 ID로 가정
-        print(f"Decoded user_id: {user_id}")  # 디코딩된 user_id 출력
+        user_id = decoded_token.get("sub")
 
         if not user_id:
             raise HTTPException(status_code=401, detail="Invalid token: User ID not found.")
 
-        # 사용자 정보 가져오기
         user = db.query(member.Member).filter(member.Member.login_id == user_id).first()
 
         if not user:
             raise HTTPException(status_code=404, detail="User not found.")
 
-        # 사용자 이름과 요약 (summary) 값 사용
         user_name = user.name
-        user_summary = user.summary  # DB에서 가져온 summary
-        user_birth = user.birth  # 사용자 생년월일
+        user_summary = user.summary
+        user_birth = user.birth
 
-        # 나이 계산 (생년월일을 기준으로 나이 계산)
         user_age = calculate_age(user_birth)
 
         if not user_summary:
             raise HTTPException(status_code=400, detail="User has not provided a summary.")
 
-        # PromptTemplate 준비
         formatted_prompt = autobiography_prompt.format(
             name=user_name,
             age=user_age,
             responses=user_summary
         )
 
-        # OpenAI 호출
+        # OpenAI API 호출
         response = client.invoke(formatted_prompt)
 
-        # 결과 반환
-        return {"autobiography": response}
+        # response.content로 content 필드 접근
+        content = response.content if hasattr(response, 'content') else ""
+        content_length = len(content)
+
+        # content와 content_length 반환
+        return {
+            "content": content,
+            "content_length": content_length
+        }
 
     except HTTPException as e:
         raise e
