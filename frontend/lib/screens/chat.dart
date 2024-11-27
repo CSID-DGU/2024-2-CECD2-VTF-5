@@ -33,7 +33,6 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
     tts.setPitch(1); // 음높이
   }
 
-
   void didChangeDependencies() {
     super.didChangeDependencies();
     _recordingService = ref.read(recordingServiceProvider);
@@ -241,6 +240,11 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
   Future<void> _speak(String text) async {
     if (text.isNotEmpty) {
       await tts.speak(text);
+      // await tts.setLanguage("ko-KR");
+    //   await tts.setSpeechRate(0.5);
+    //   await tts.setPitch(1);
+    //   await Future.delayed(Duration(milliseconds: 500));
+    //   await tts.speak(text);
     }
   }
 }
