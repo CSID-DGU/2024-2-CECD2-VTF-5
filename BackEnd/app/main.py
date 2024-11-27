@@ -313,20 +313,40 @@ def process_autobiography_with_length(token: str = Depends(oauth2_scheme), db: S
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing autobiography: {str(e)}")
 
-################################################################################
-# 루트 경로 엔드포인트 정의 (HTML 페이지 렌더링)
-# @app.get("/", response_class=HTMLResponse)
-# async def read_root(request: Request):
-#     return templates.TemplateResponse("index.html", {"request": request})
-#
-# @app.get("/signup", response_class=HTMLResponse)
-# async def signup_page(request: Request):
-#     return templates.TemplateResponse("signup.html", {"request": request})
-#
-# @app.get("/login", response_class=HTMLResponse)
-# async def login_page(request: Request):
-#     return templates.TemplateResponse("login.html", {"request": request})
-#
-# @app.get("/generate_question", response_class=HTMLResponse)
-# async def generate_question_page(request: Request):
-#     return templates.TemplateResponse("generate_question.html", {"request": request})
+@app.get("/mypage", response_model=dict)
+def get_user_mypage(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    """
+    유저의 마이페이지
+    사용자 인적사항과 요약(summary)을 포함
+    """
+    try:
+        # 토큰에서 사용자 정보 추출
+        decoded_token = decode_access_token(token)
+        user_id = decoded_token.get("sub")
+
+        if not user_id:
+            raise HTTPException(status_code=401, detail="유효하지 않은 토큰입니다.")
+
+        # 사용자 정보 조회
+        user = db.query(member.Member).filter(member.Member.login_id == user_id).first()
+
+        if not user:
+            raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+
+        # 사용자 정보 구성
+        user_info = {
+            "name": user.name,
+            "email": user.email,
+            "birth": user.birth,
+            "is_male": user.is_male,
+            "is_married": user.is_married,
+            "has_child": user.has_child,
+            "summary": user.summary or "요약 정보가 없습니다."
+        }
+
+        return user_info
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="마이페이지 데이터를 가져오는 중 오류가 발생했습니다.")
