@@ -6,6 +6,7 @@ import '../services/recording_service.dart';
 import '../provider/question_provider.dart';
 import '../provider/responsesProvider.dart';
 import '../provider/recordingServiceProvider.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 
 class ChatWidget extends ConsumerStatefulWidget {
   const ChatWidget({Key? key}) : super(key: key);
@@ -18,14 +19,20 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
   late ChatModel _model;
   late RecordingService _recordingService;
   bool isRecording = false;
-
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  final FlutterTts tts = FlutterTts();
 
   @override
   void initState() {
     super.initState();
     _model = ChatModel();
+
+    tts.setLanguage("ko-KR");
+    tts.setSpeechRate(0.5); // 속도
+    tts.setVolume(0.6); // 볼륨
+    tts.setPitch(1); // 음높이
   }
+
 
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -35,6 +42,7 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
   @override
   void dispose() {
     _model.dispose();
+    tts.stop();
     super.dispose();
   }
 
@@ -61,6 +69,7 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
             mainAxisSize: MainAxisSize.max,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              // 질문창
               Container(
                 width: double.infinity,
                 height: screenHeight * 0.15,
@@ -77,8 +86,11 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                   children: [
                     Padding(
                       padding: const EdgeInsets.only(left: 25),
-                      child: Image.asset('assets/images/stt.png',
+                      child: GestureDetector(
+                        onTap: () => _speak(selectedQuestion),
+                        child: Image.asset('assets/images/stt.png',
                         width: 70,height: 70,
+                        ),
                       ),
                     ),
                     Expanded(
@@ -104,6 +116,7 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
               ),
               Column(
                 children: [
+                  // 답변창
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                     child: Container(
@@ -125,9 +138,9 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                               child: Text(
                                 responses.join('\n'),
                                 style: TextStyle(
-                                  fontFamily: 'Pretendard',
-                                  fontSize: screenWidth * 0.05,
-                                  fontWeight: FontWeight.w500
+                                  fontFamily: 'nanum',
+                                  fontSize: screenWidth * 0.07,
+                                  fontWeight: FontWeight.w700
                                 ),
                               ),
                             ),
@@ -223,6 +236,12 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
     setState(() {
       isRecording = _recordingService.isRecording;
     });
+  }
+
+  Future<void> _speak(String text) async {
+    if (text.isNotEmpty) {
+      await tts.speak(text);
+    }
   }
 }
 
