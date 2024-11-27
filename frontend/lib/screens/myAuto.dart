@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../services/complete_service.dart';
 
 class MyAutoWidget extends StatefulWidget {
   const MyAutoWidget({Key? key}) : super(key: key);
@@ -11,6 +12,7 @@ class MyAutoWidget extends StatefulWidget {
 
 class _MyAutoWidgetState extends State<MyAutoWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  final AutobiographyService _service = AutobiographyService();
 
   @override
   Widget build(BuildContext context) {
@@ -44,20 +46,44 @@ class _MyAutoWidgetState extends State<MyAutoWidget> {
                 padding: const EdgeInsets.fromLTRB(50, 10, 50, 30),
                 child: Container(
                   height: screenHeight * 0.7,
-                  child: ListView(
-                    padding: EdgeInsets.zero,
-                    children: [
-                      Text(
-                        '자서전 내용\n.\n.\n.\n.\n..\n.\n\n.\n.\n\n\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n',
-                        style: TextStyle(
-                          fontFamily: 'nanum',
-                          fontWeight: FontWeight.bold,
-                          fontSize: screenHeight * 0.03,
-                          color: Colors.black, // Replace with your desired text color
-                          letterSpacing: 0.0,
-                        ),
-                      ),
-                    ],
+                  child: FutureBuilder<String?>(
+                    future: _service.fetchAutobiographyContent(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      } else if (snapshot.hasError) {
+                        return Center(
+                          child: Text(
+                            'Error: ${snapshot.error}',
+                            style: TextStyle(color: Colors.red,),
+                          ),
+                        );
+                      } else if (snapshot.hasData) {
+                        return ListView(
+                          padding: EdgeInsets.zero,
+                          children: [
+                            Text(
+                              snapshot.data!,
+                              style: TextStyle(
+                                fontFamily: 'nanum',
+                                fontSize: 16,
+                                color: Colors.black,
+                                letterSpacing: 0.0,
+                              ),
+                            ),
+                          ],
+                        );
+                      } else {
+                        return Center(
+                          child: Text(
+                            'No content available',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        );
+                      }
+                    },
                   ),
                 ),
               ),
