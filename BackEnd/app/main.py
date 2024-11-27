@@ -350,3 +350,85 @@ def get_user_mypage(token: str = Depends(oauth2_scheme), db: Session = Depends(g
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail="마이페이지 데이터를 가져오는 중 오류가 발생했습니다.")
+    
+@app.post("/generate_new_topic_question")
+async def generate_new_topic_question(input_data: SpeechModel, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
+    """
+    GPT에게 사용자의 정보를 기반으로 맞춤화된 질문을 생성 요청
+    """
+    stt_input = input_data.stt_input  # JSON Body에서 텍스트 추출
+
+    # 사용자 ID 추출
+    try:
+        token_data = decode_access_token(token)
+        user_id = token_data.get("sub")
+
+        if not user_id:
+            raise HTTPException(status_code=401, detail="유효하지 않은 사용자 토큰입니다.")
+    except HTTPException as e:
+        print(f"토큰 오류: {str(e)}")
+        raise e
+
+    try:
+        print(f"\n사용자의 입력값: {stt_input}")
+
+        # 1. 사용자 정보 가져오기 (DB에서 'name', 'birth', 'job', 'interests' 필드를 가져옵니다)
+        user = db.query(member.Member).filter(member.Member.login_id == user_id).first()
+
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found.")
+
+        # 사용자 정보
+        user_name = user.name
+        user_birth = user.birth
+        
+        # 나이 계산
+        user_age = calculate_age(user_birth)
+
+        # 2. 사용자 맞춤형 질문 생성 프롬프트
+        new_topic_prompt = f"""
+        사용자 정보:
+        - 나이: {user_age}
+        - 생년월일: {user_birth}
+
+        사용자의 정보에 맞는, 개별화된 3개의 질문을 생성해주세요. 이전에 답했던 질문과는 다른 주제를 다뤄야합니다.
+        질문은 사용자의 나이, 생년월일을 바탕으로 시대적 배경과 관련된 주제로 다뤄야 하며, 사회적 변화나 현재의 삶을 반영해야 합니다.
+        질문은 친절하고 따뜻한 어조로 작성되어야 하며, 사용자가 자연스럽게 자신의 이야기를 풀어낼 수 있도록 유도해야 합니다. 또한 어려운 단어 및 최신 탄생한 단어는 가급적 사용을 피해야합니다.
+        각 질문은 다음 요소를 다룰 수 있습니다:
+
+        1. **세대적 차이**: 사용자가 경험한 시대적 변화나 특정 세대에서 나타나는 특성에 대한 질문.
+        2. **기술 발전**: 사용자가 경험한 주요 기술 발전(인터넷, 스마트폰 등)과 그 변화에 대한 질문.
+        3. **사회적 변화**: 사용자가 경험한 사회적, 정치적 사건들(예: 경제 위기, 정치적 변화)과 그 사건들이 개인의 삶에 미친 영향.
+        4. **문화적 영향**: 사용자가 자라온 환경에서의 문화적 특성(음악, 영화, 패션 등)이 오늘날까지 영향을 미친 부분에 대한 질문.
+        5. **현재의 삶과 미래**: 현재의 삶에 대해 어떻게 느끼는지, 앞으로의 변화에 대한 예측과 희망에 대한 질문.
+        6. **사회적 연대**: 사용자가 겪은 사회적 연대나 협력의 경험, 그리고 이를 통한 교훈에 대한 질문.
+
+        이 요소들을 고려하여 사용자가 자신의 삶과 시대적 배경에 대해 더욱 깊이 성찰할 수 있도록 도와주는 질문을 만들어주세요.
+        
+
+        생성된 질문:
+        """
+
+        # 새로운 질문 생성
+        response = client.invoke(new_topic_prompt)
+
+        # 응답에서 질문을 추출
+        if hasattr(response, 'content'):
+            response_text = response.content
+        elif isinstance(response, list) and len(response) > 0:
+            response_text = response[0].content
+        else:
+            raise ValueError("응답 형식이 예상과 다릅니다.")
+
+        # 응답을 줄바꿈 기준으로 3개 질문 추출
+        questions = response_text.strip().split("\n")
+        questions = [q.strip() for q in questions if q.strip()][:3]
+
+        # 결과 반환
+        return {
+            "new_topic_questions": questions
+        }
+
+    except Exception as e:
+        print(f"General error in generating new_topic question: {str(e)}")
+        raise HTTPException(status_code=500, detail="질문 생성 중 오류가 발생했습니다.")
