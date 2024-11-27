@@ -21,7 +21,7 @@ class QuestionWidget extends ConsumerWidget {
     // 질문 리스트
     final questions = questionState?.questions ?? [];
 
-    // questionNotifier.fetchInitialData(); //강제호출(비상탈출)
+    questionNotifier.fetchInitialData(); //강제호출(비상탈출)
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,

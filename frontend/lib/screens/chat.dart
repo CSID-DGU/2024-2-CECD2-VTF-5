@@ -170,7 +170,7 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                         padding: const EdgeInsets.only(left: 20),
                         child: InkWell(
                           onTap: () {
-                            Get.toNamed('/home');
+                            Get.toNamed('/homePage');
                           },
                           child: Column(
                             children: [
