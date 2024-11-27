@@ -36,13 +36,13 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                       Padding(
                         padding: const EdgeInsets.only(left: 70, top: 10),
                         child: Image.asset(
-                          'assets/icons/HomeIcon.png',
+                          'assets/images/home.png',
                           width: 40,
                           height: 40,
                         ),
                       ),
                       Padding(
-                        padding: EdgeInsets.only(left: 20),
+                        padding: EdgeInsets.only(left: 15),
                         child: Text(
                           '홈',
                           style: TextStyle(
@@ -130,10 +130,10 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                         children: [
                           Image.asset(
                             'assets/images/mypage.png',
-                            width: 70,
-                            height: 70,
+                            width: 60,
+                            height: 60,
                           ),
-                          // SizedBox(width: 5),
+                          SizedBox(width: 10),
                           Text(
                             '나의 정보 보기',
                             style: TextStyle(
@@ -142,7 +142,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          SizedBox(width: 15),
+                          SizedBox(width: 10),
                         ],
                       ),
                     ),

@@ -210,19 +210,19 @@ class _MyPageWidgetState extends State<MyPageWidget> {
                         indent: 20,
                         endIndent: 20,
                       ),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(35, 0, 0, 0),
-                          child: const Text(
-                            '목소리 변경',
-                            style: TextStyle(
-                              fontFamily: 'Pretendard',
-                            ),
-                          ),
-                        ),
-                      ),
-                      _buildVoiceSelection(),
+                      // Align(
+                      //   alignment: Alignment.centerLeft,
+                      //   child: Padding(
+                      //     padding: const EdgeInsets.fromLTRB(35, 0, 0, 0),
+                      //     child: const Text(
+                      //       '목소리 변경',
+                      //       style: TextStyle(
+                      //         fontFamily: 'Pretendard',
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ),
+                      // _buildVoiceSelection(),
                     ],
                   ),
                 ),
@@ -266,28 +266,28 @@ class _MyPageWidgetState extends State<MyPageWidget> {
     );
   }
 
-  Widget _buildVoiceSelection() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 5, 0, 5),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: ['남성', '여성', '어린이'].map((voice) {
-          return Row(
-            children: [
-              Radio<String>(
-                value: voice,
-                groupValue: selectedVoice,
-                onChanged: (value) {
-                  setState(() {
-                    selectedVoice = value!;
-                  });
-                },
-              ),
-              Text(voice),
-            ],
-          );
-        }).toList(),
-      ),
-    );
-  }
+  // Widget _buildVoiceSelection() {
+  //   return Padding(
+  //     padding: const EdgeInsets.fromLTRB(20, 5, 0, 5),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: ['남성', '여성', '어린이'].map((voice) {
+  //         return Row(
+  //           children: [
+  //             Radio<String>(
+  //               value: voice,
+  //               groupValue: selectedVoice,
+  //               onChanged: (value) {
+  //                 setState(() {
+  //                   selectedVoice = value!;
+  //                 });
+  //               },
+  //             ),
+  //             Text(voice),
+  //           ],
+  //         );
+  //       }).toList(),
+  //     ),
+  //   );
+  // }
 }
