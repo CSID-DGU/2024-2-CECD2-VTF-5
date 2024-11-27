@@ -156,9 +156,9 @@ class _ExplanationWidgetState extends State<ExplanationWidget> {
                                 Text(
                                   '홈화면',
                                   style: TextStyle(
-                                    fontFamily: 'Pretendard',
-                                    fontSize: screenWidth * 0.04,
-                                    fontWeight: FontWeight.w500
+                                    fontFamily: 'nanum',
+                                    fontSize: screenWidth * 0.06,
+                                    fontWeight: FontWeight.w600
                                   ),
                                 ),
                               ],
@@ -178,9 +178,9 @@ class _ExplanationWidgetState extends State<ExplanationWidget> {
                                 Text(
                                   '다음질문',
                                   style: TextStyle(
-                                    fontFamily: 'Pretendard',
-                                    fontSize: screenWidth * 0.04,
-                                    fontWeight: FontWeight.w500
+                                    fontFamily: 'nanum',
+                                    fontSize: screenWidth * 0.06,
+                                    fontWeight: FontWeight.w600
                                   ),
                                 ),
                               ],

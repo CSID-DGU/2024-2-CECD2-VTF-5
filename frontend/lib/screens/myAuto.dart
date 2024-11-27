@@ -50,8 +50,9 @@ class _MyAutoWidgetState extends State<MyAutoWidget> {
                       Text(
                         '자서전 내용\n.\n.\n.\n.\n..\n.\n\n.\n.\n\n\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n',
                         style: TextStyle(
-                          fontFamily: 'Pretendard',
-                          fontSize: 16,
+                          fontFamily: 'nanum',
+                          fontWeight: FontWeight.bold,
+                          fontSize: screenHeight * 0.03,
                           color: Colors.black, // Replace with your desired text color
                           letterSpacing: 0.0,
                         ),
@@ -77,9 +78,9 @@ class _MyAutoWidgetState extends State<MyAutoWidget> {
                           child: Text(
                           '***자 작성',
                           style: TextStyle(
-                            fontFamily: 'Pretendard',
+                            fontFamily: 'nanum',
                             fontWeight: FontWeight.w600,
-                            fontSize: screenWidth * 0.04,
+                            fontSize: screenWidth * 0.06,
                             color: Colors.black, // Replace with your desired text color
                             // fontFamily: 'nanum'
                           ),
@@ -98,9 +99,9 @@ class _MyAutoWidgetState extends State<MyAutoWidget> {
                         child: Text(
                         '**개 질문 답변',
                           style: TextStyle(
-                            fontFamily: 'Pretendard',
+                            fontFamily: 'nanum',
                             fontWeight: FontWeight.w600,
-                            fontSize: screenWidth * 0.04,
+                            fontSize: screenWidth * 0.06,
                             color: Colors.black, // Replace with your desired text color
                             letterSpacing: 0.0,
                             // fontFamily: 'nanum'
