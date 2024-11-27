@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'routes/app_routes.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(ProviderScope(child: const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -23,7 +24,7 @@ class MyApp extends StatelessWidget {
 
 
 // import 'package:flutter/material.dart';
-// import '../screens/recorder.dart';
+// import '../screens/tts_test.dart';
 
 
 // void main() {
@@ -41,7 +42,7 @@ class MyApp extends StatelessWidget {
 //         colorScheme: ColorScheme.fromSeed(seedColor: Colors.red),
 //         useMaterial3: true,
 //       ),
-//       home: HomePage(),
+//       home: Text_To_Speech(),
 //     );
 //   }
 // }

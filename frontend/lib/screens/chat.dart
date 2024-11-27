@@ -1,36 +1,62 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
+import 'package:vtfecho/model/question.dart';
 import '../services/recording_service.dart';
+import '../provider/question_provider.dart';
+import '../provider/responsesProvider.dart';
+import '../provider/recordingServiceProvider.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 
-class ChatWidget extends StatefulWidget {
+class ChatWidget extends ConsumerStatefulWidget {
   const ChatWidget({Key? key}) : super(key: key);
 
   @override
-  State<ChatWidget> createState() => _ChatWidgetState();
+  ConsumerState<ChatWidget> createState() => _ChatWidgetState();
 }
 
-class _ChatWidgetState extends State<ChatWidget> {
+class _ChatWidgetState extends ConsumerState<ChatWidget> {
   late ChatModel _model;
   late RecordingService _recordingService;
   bool isRecording = false;
-
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  final FlutterTts tts = FlutterTts();
 
   @override
   void initState() {
     super.initState();
     _model = ChatModel();
-    _recordingService = RecordingService();
+
+    tts.setLanguage("ko-KR");
+    tts.setSpeechRate(0.5); // 속도
+    tts.setVolume(0.6); // 볼륨
+    tts.setPitch(1); // 음높이
+  }
+
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _recordingService = ref.read(recordingServiceProvider);
   }
 
   @override
   void dispose() {
     _model.dispose();
+    tts.stop();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    // Provider에서 선택된 질문 가져오기
+    final questionNotifier = ref.read(questionProvider.notifier);
+    final selectedQuestion = questionNotifier.getSelectedQuestion() ?? '질문이 선택되지 않았습니다.';
+
+    final responses = ref.watch(responsesProvider);
+
+
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
@@ -42,32 +68,46 @@ class _ChatWidgetState extends State<ChatWidget> {
             mainAxisSize: MainAxisSize.max,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              // 질문창
               Container(
                 width: double.infinity,
-                height: 150,
+                height: screenHeight * 0.15,
                 decoration: BoxDecoration(
-                  color: Color(0xFFC3E5AE),
+                  color: Color(0xFFB1EBB3),
                   borderRadius: BorderRadius.only(
                     bottomLeft: Radius.circular(30),
                     bottomRight: Radius.circular(30),
+                    topLeft: Radius.circular(30),
+                    topRight: Radius.circular(30),
                   ),
                 ),
                 child: Row(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(left: 30),
-                      child: Image.asset('assets/icons/QuestionBoy.png',
-                        width: 70,height: 70,),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 20),
-                      child: Text(
-                        '그렇다면 작성자님은 어떤 이유로\n친구에게 소개팅을 주선했나요?',
-                        style: TextStyle(
-                          fontFamily: 'nanum',
-                          fontSize: 32,
-                          fontWeight: FontWeight.normal
+                      padding: const EdgeInsets.only(left: 25),
+                      child: GestureDetector(
+                        onTap: () => _speak(selectedQuestion),
+                        child: Image.asset('assets/images/stt.png',
+                        width: 70,height: 70,
                         ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        // padding: const EdgeInsets.only(left: 20, right: 20),
+                        padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+                        child: SingleChildScrollView(
+                          child: Text(
+                            selectedQuestion,
+                            style: TextStyle(
+                              fontFamily: 'nanum',
+                              fontSize: screenWidth * 0.08,
+                              fontWeight: FontWeight.w600
+                            ),
+                            softWrap: true,
+                            overflow: TextOverflow.visible,
+                          ),
+                        )
                       ),
                     ),
                   ],
@@ -75,6 +115,7 @@ class _ChatWidgetState extends State<ChatWidget> {
               ),
               Column(
                 children: [
+                  // 답변창
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                     child: Container(
@@ -88,17 +129,17 @@ class _ChatWidgetState extends State<ChatWidget> {
                           Container(
                             width: double.infinity,
                             decoration: BoxDecoration(
-                              color: Color(0xFFFFBC8C),
+                              color: Color(0xFFFFCFAD),
                               borderRadius: BorderRadius.circular(30),
                             ),
                             child: Padding(
                               padding: const EdgeInsets.all(20),
                               child: Text(
-                                _recordingService.responses.join('\n'),
-                                // '답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!\n답변입니다!',
+                                responses.join('\n'),
                                 style: TextStyle(
                                   fontFamily: 'nanum',
-                                  fontSize: 30,
+                                  fontSize: screenWidth * 0.07,
+                                  fontWeight: FontWeight.w700
                                 ),
                               ),
                             ),
@@ -128,7 +169,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                         padding: const EdgeInsets.only(left: 20),
                         child: InkWell(
                           onTap: () {
-                            Get.back();
+                            Get.toNamed('/homePage');
                           },
                           child: Column(
                             children: [
@@ -141,7 +182,8 @@ class _ChatWidgetState extends State<ChatWidget> {
                                 '홈화면',
                                 style: TextStyle(
                                   fontFamily: 'nanum',
-                                  fontSize: 16,
+                                  fontSize: screenWidth * 0.06,
+                                  fontWeight: FontWeight.w600
                                 ),
                               ),
                             ],
@@ -154,23 +196,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                           children: [
                             GestureDetector(
                               onTap: () async{
-                                List<String>? questions = await _recordingService.sendResponsesToServer();
-                                if (questions != null && questions.isNotEmpty) {
-                                  // 질문 리스트 출력
-                                  String? question1 = questions.length > 0
-                                      ? questions[0]
-                                      : null;
-                                  String? question2 = questions.length > 1
-                                      ? questions[1]
-                                      : null;
-                                  String? question3 = questions.length > 2
-                                      ? questions[2]
-                                      : null;
-                                  print("Question 1: $question1 \nQuestion 2: $question1\nQuestion 3: $question3");
-                                }
-                                else {
-                                  print("질문을 받아오지 못했습니다.");
-                                }
+                                Get.toNamed('/nextQuestoin');
                               },
                               child: Icon(
                                 Icons.navigate_next_rounded,
@@ -182,7 +208,8 @@ class _ChatWidgetState extends State<ChatWidget> {
                               '다음질문',
                               style: TextStyle(
                                 fontFamily: 'nanum',
-                                fontSize: 16,
+                                fontSize: screenWidth * 0.06,
+                                fontWeight: FontWeight.w600
                               ),
                             ),
                           ],
@@ -208,6 +235,17 @@ class _ChatWidgetState extends State<ChatWidget> {
     setState(() {
       isRecording = _recordingService.isRecording;
     });
+  }
+
+  Future<void> _speak(String text) async {
+    if (text.isNotEmpty) {
+      await tts.speak(text);
+      // await tts.setLanguage("ko-KR");
+    //   await tts.setSpeechRate(0.5);
+    //   await tts.setPitch(1);
+    //   await Future.delayed(Duration(milliseconds: 500));
+    //   await tts.speak(text);
+    }
   }
 }
 

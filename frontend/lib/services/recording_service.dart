@@ -1,17 +1,33 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:io';
 import 'package:record/record.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../config/app_config.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../model/question.dart';
+import '../provider/responsesProvider.dart';
 
 class RecordingService {
   final record = AudioRecorder();
   String? _recordingPath;
   bool _isRecording = false;
-  List<String> responses = ["자전거 타던 그때 기억이 생생하군요."]; // 서버로 전송할 응답 리스트
 
   bool get isRecording => _isRecording;
+
+  final Ref ref; // Ref를 추가합니다.
+
+  RecordingService(this.ref);
+
+  void clearResponses() {
+    ref.read(responsesProvider.notifier).clearResponses();
+  }
+
+  void addResponse(String response) {
+    ref.read(responsesProvider.notifier).addResponse(response);
+  }
 
   // 녹음 시작
   Future<void> startRecording() async {
@@ -29,10 +45,10 @@ class RecordingService {
     _recordingPath = await record.stop();
     _isRecording = false;
     if (_recordingPath != null) {
-      String? responseBody = await sendFileToServer(_recordingPath!);
-      if (responseBody != null) {
-        responses.add(responseBody);
-        print('서버 응답: $responseBody');
+      Map<String, dynamic>? responseBody = await sendFileToServer(_recordingPath!);
+      if (responseBody != null && responseBody.containsKey('text')) {
+        ref.read(responsesProvider.notifier).addResponse(responseBody['text']);
+        print('서버 응답: ${responseBody['text']}');
       } else {
         print('서버 응답 없음 또는 실패');
       }
@@ -40,9 +56,9 @@ class RecordingService {
   }
 
   // 파일 서버 전송
-  Future<String?> sendFileToServer(String filePath) async {
+  Future<Map<String, dynamic>?> sendFileToServer(String filePath) async {
     File audioFile = File(filePath);
-    String url = "http://10.0.2.2:8000/stt";
+    String url = "${AppConfig.apiBaseUrl}/stt";
     var request = http.MultipartRequest('POST', Uri.parse(url));
     request.files.add(await http.MultipartFile.fromPath('recordFile', audioFile.path));
 
@@ -50,7 +66,7 @@ class RecordingService {
       var response = await request.send();
       if (response.statusCode == 200) {
         final responseBody = await response.stream.bytesToString();
-        return responseBody;
+        return jsonDecode(responseBody);
       } else {
         print('파일 업로드 실패: ${response.statusCode}');
       }
@@ -61,21 +77,54 @@ class RecordingService {
   }
 
   // responses 리스트 서버 전송
-  Future<List<String>?> sendResponsesToServer() async {
-    String url = "http://10.0.2.2:8000/generate_question";
-    String bearerToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXM0MjE0ZGFmdDEyMzQ1IiwiZXhwIjoxNzMxOTk4Mzk1fQ.TrpqVFz307fY5hpokFJpql1La2LMfPYC51BYvyyjCEY"; // Bearer Token 추가
+  Future<QuestionModel?> sendResponsesToServer() async {
+    String url = "${AppConfig.apiBaseUrl}/generate_question";
 
+    final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+
+    Future<String?> getAccessToken() async {
+      String? tokenData= await _secureStorage.read(key: 'loginData');
+      if (tokenData != null) {
+        try {
+          // JSON 문자열을 Map으로 변환
+          final Map<String, dynamic> tokenMap = json.decode(tokenData);
+
+          // accessToken 값 추출
+          return tokenMap['accessToken'] as String?;
+        } catch (e) {
+          // JSON 파싱 에러 처리
+          print('Error decoding JSON: $e');
+          return null;
+        }
+      }
+      return null;
+    }
+
+    String? token = await getAccessToken();
+    print("$token");
+    if (token == null) {
+      print("Access Token이 없습니다.");
+      return null;
+    }
+
+    String bearerToken = "Bearer $token";
+
+    final responses = ref.read(responsesProvider);
     if (responses.isEmpty) {
       print("responses 리스트가 비어 있습니다.");
       return null;
     }
 
+    String sttInput = responses.join(" ");
+
     var headers = {
       "Content-Type": "application/json",
-      "Authorization": "Bearer $bearerToken",
+      "Authorization": "$bearerToken",
     };
 
-    var body = json.encode({"stt_input": responses.join("\n")});
+    var body = json.encode({"stt_input": sttInput});
+    print("Headers: $headers");
+    print("Body: $body");
 
     try {
       var response = await http.post(
@@ -84,18 +133,34 @@ class RecordingService {
         body: body,
       );
 
+      print("Response Status Code: ${response.statusCode}");
+      print("Response Headers: ${response.headers}");
+      print("Response Body: ${response.body}"); // 텍스트 응답 그대로 출력
+
       if (response.statusCode == 200) {
-        // 서버로부터 JSON 응답 파싱
+        // 성공 시 단순 텍스트 응답 처리
         String decodedBody = utf8.decode(response.bodyBytes);
         Map<String, dynamic> responseBody = json.decode(decodedBody);
-        List<String> questions = List<String>.from(responseBody['questions'] ?? []);
-        return questions;
+        print("Success Response: $responseBody");
+        print("Questions: ${responseBody['questions']}");
+        QuestionModel questionModel =
+        QuestionModel.fromList(responseBody['questions']);
+        return questionModel;
+        // 필요하다면 텍스트를 화면에 표시하거나 로직에 활용
       } else {
-        print('responses 전송 실패: ${response.statusCode}');
+        // 오류 시 텍스트 응답 처리
+        String errorBody = utf8.decode(response.bodyBytes);
+        print("Error Response Body: $errorBody");
+        return null;
+
       }
     } catch (e) {
-      print('에러: $e');
+      // 네트워크 요청 또는 기타 예외 처리
+      print("Request failed with exception: $e");
+      return null;
+
     }
+
     return null;
   }
 }
