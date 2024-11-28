@@ -229,9 +229,9 @@ class RecordingService {
         String decodedBody = utf8.decode(response.bodyBytes);
         Map<String, dynamic> responseBody = json.decode(decodedBody);
         print("Success Response: $responseBody");
-        print("Questions: ${responseBody['questions']}");
+        print("Questions: ${responseBody['new_topic_questions']}");
         QuestionModel questionModel =
-        QuestionModel.fromList(responseBody['questions']);
+        QuestionModel.fromList(responseBody['new_topic_questions']);
         return questionModel;
         // 필요하다면 텍스트를 화면에 표시하거나 로직에 활용
       } else {

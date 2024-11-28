@@ -69,7 +69,7 @@ class QuestionWidget extends ConsumerWidget {
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          backgroundColor: const Color(0xFFC3E5AE), // 비활성화 버튼 색상
+          backgroundColor: const Color(0xFFC3E5AE),
           elevation: 5,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),
