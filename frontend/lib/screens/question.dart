@@ -11,17 +11,21 @@ class QuestionWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final recordingService = ref.read(recordingServiceProvider);
+    final questionState = ref.watch(questionProvider);
     final questionNotifier = ref.read(questionProvider.notifier);
-    final questionState = ref.watch(questionProvider); // 상태를 감시
     final selectedIndex = questionNotifier.selectedIndex;
 
     print("Current Question State in UI: ${questionState?.questions}");
 
-
     // 질문 리스트
-    final questions = questionState?.questions ?? [];
+    final questions = questionState?.questions ?? ["질문을 생성 중 입니다."];
 
-    questionNotifier.fetchInitialData(); //강제호출(비상탈출)
+    if (questionState == null) {
+      // 상태가 null일 경우만 초기화
+      questionNotifier.fetchInitialData();
+    }
+
+    // questionNotifier.fetchInitialData(); //강제호출(비상탈출)
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,

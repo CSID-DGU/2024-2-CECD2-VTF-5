@@ -44,7 +44,10 @@ class _nextquestionWidgetState extends ConsumerState<nextquestionWidget> {
                   }
 
                   final result = await recordingService.sendResponsesToServer();
+
+                  final questionNotifier = ref.read(questionProvider.notifier);
                   if (result != null) {
+                    questionNotifier.resetState();
                     Get.toNamed('/question'); // 페이지 이동
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -63,7 +66,11 @@ class _nextquestionWidgetState extends ConsumerState<nextquestionWidget> {
                   }
 
                   final result = await recordingService.sendResponsesToServerDD();
+
+                  final questionNotifier = ref.read(questionProvider.notifier);
+
                   if (result != null) {
+                    questionNotifier.resetState();
                     Get.toNamed('/question'); // 페이지 이동
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(

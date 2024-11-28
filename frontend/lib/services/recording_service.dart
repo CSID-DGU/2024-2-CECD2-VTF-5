@@ -8,6 +8,7 @@ import 'dart:convert';
 import '../config/app_config.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../model/question.dart';
+import '../provider/question_provider.dart';
 import '../provider/responsesProvider.dart';
 
 class RecordingService {
@@ -18,6 +19,8 @@ class RecordingService {
   bool get isRecording => _isRecording;
 
   final Ref ref; // Ref를 추가합니다.
+
+
 
   RecordingService(this.ref);
 
@@ -79,6 +82,8 @@ class RecordingService {
   // responses 리스트 서버 전송
   Future<QuestionModel?> sendResponsesToServer() async {
     String url = "${AppConfig.apiBaseUrl}/generate_question";
+
+    final questionNotifier = ref.read(questionProvider.notifier);
 
     final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
@@ -169,6 +174,8 @@ class RecordingService {
 
     final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
+    final questionNotifier = ref.read(questionProvider.notifier);
+
     Future<String?> getAccessToken() async {
       String? tokenData= await _secureStorage.read(key: 'loginData');
       if (tokenData != null) {
@@ -231,7 +238,7 @@ class RecordingService {
         print("Success Response: $responseBody");
         print("Questions: ${responseBody['new_topic_questions']}");
         QuestionModel questionModel =
-        QuestionModel.fromList(responseBody['new_topic_questions']);
+            QuestionModel.fromList(responseBody['new_topic_questions']);
         return questionModel;
         // 필요하다면 텍스트를 화면에 표시하거나 로직에 활용
       } else {
