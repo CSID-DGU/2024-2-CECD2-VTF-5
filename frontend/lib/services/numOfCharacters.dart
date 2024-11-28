@@ -3,8 +3,8 @@ import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-class AutobiographyService {
-  Future<String?> fetchAutobiographyContent() async {
+class numOfCharacters {
+  Future<int?> fetchNumber() async {
     final url = Uri.parse('${AppConfig.apiBaseUrl}/complete');
     final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
@@ -46,7 +46,7 @@ class AutobiographyService {
     if (response.statusCode == 200) {
       final decodedBody=utf8.decode(response.bodyBytes);
       final data = jsonDecode(decodedBody);
-      return data['content'];
+      return data['content_length'];
     } else {
       print('Error: ${response.statusCode}, Body: ${response.body}');
       throw Exception('Failed to load autobiography content');

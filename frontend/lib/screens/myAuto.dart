@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../services/complete_service.dart';
+import '../services/numOfCharacters.dart';
 
 class MyAutoWidget extends StatefulWidget {
   const MyAutoWidget({Key? key}) : super(key: key);
@@ -13,6 +14,7 @@ class MyAutoWidget extends StatefulWidget {
 class _MyAutoWidgetState extends State<MyAutoWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final AutobiographyService _service = AutobiographyService();
+  final numOfCharacters _characters = numOfCharacters();
 
   @override
   Widget build(BuildContext context) {
@@ -90,49 +92,47 @@ class _MyAutoWidgetState extends State<MyAutoWidget> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 40.0),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
-                      height: screenHeight * 0.08,
-                      width: screenWidth * 0.4,
+                      height: screenHeight * 0.07,
+                      width: screenWidth * 0.7,
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
                         color: Color(0xFFC3E5AE), // Replace with your desired button color
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Center(
-                          child: Text(
-                          '***자 작성',
-                          style: TextStyle(
-                            fontFamily: 'nanum',
-                            fontWeight: FontWeight.w600,
-                            fontSize: screenWidth * 0.06,
-                            color: Colors.black, // Replace with your desired text color
-                            // fontFamily: 'nanum'
-                          ),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      height: screenHeight * 0.08,
-                      width: screenWidth * 0.4,
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Color(0xFFC3E5AE), // Replace with your desired button color
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Center(
-                        child: Text(
-                        '**개 질문 답변',
-                          style: TextStyle(
-                            fontFamily: 'nanum',
-                            fontWeight: FontWeight.w600,
-                            fontSize: screenWidth * 0.06,
-                            color: Colors.black, // Replace with your desired text color
-                            letterSpacing: 0.0,
-                            // fontFamily: 'nanum'
-                          ),
-                        ),
+                          child: FutureBuilder<int?>(
+                            future: _characters.fetchNumber(),
+                            builder: (context, snapshot){
+                              if (snapshot.connectionState == ConnectionState.waiting) {
+                                return CircularProgressIndicator(); // 로딩 표시
+                              } else if (snapshot.hasError) {
+                                return Text('Error: ${snapshot.error}'); // 에러 처리
+                              } else if (snapshot.hasData) {
+                                return Text(
+                                  '${snapshot.data}자 작성',
+                                  style: TextStyle(
+                                    fontFamily: 'nanum',
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: screenWidth * 0.06,
+                                    color: Colors.black,
+                                  ),
+                                );
+                              } else {
+                                return Text(
+                                  '데이터 없음',
+                                  style: TextStyle(
+                                    fontFamily: 'nanum',
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: screenWidth * 0.06,
+                                    color: Colors.black,
+                                  ),
+                                );
+                              }
+                            }
+                          )
                       ),
                     ),
                   ],

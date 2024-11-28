@@ -111,7 +111,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                         borderRadius: BorderRadius.circular(8),
                         child: Image.asset(
                           'assets/images/leftleaf.png',
-                          width: 80,
+                          width: 66,
                           height: 200,
                         ),
                       ),
@@ -129,7 +129,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                           borderRadius: BorderRadius.circular(8),
                           child: Image.asset(
                             'assets/images/rightleaf.png',
-                            width: 80,
+                            width: 70,
                             height: 200,
                           ),
                         ),

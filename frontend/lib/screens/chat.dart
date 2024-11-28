@@ -52,7 +52,7 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
 
     // Provider에서 선택된 질문 가져오기
     final questionNotifier = ref.read(questionProvider.notifier);
-    final selectedQuestion = questionNotifier.getSelectedQuestion() ?? '질문이 선택되지 않았습니다.';
+    final selectedQuestion = questionNotifier.getSelectedQuestion() ?? '질문에 답변해 주세요!';
 
     final responses = ref.watch(responsesProvider);
 
@@ -101,7 +101,7 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                             selectedQuestion,
                             style: TextStyle(
                               fontFamily: 'nanum',
-                              fontSize: screenWidth * 0.08,
+                              fontSize: screenWidth * 0.07,
                               fontWeight: FontWeight.w600
                             ),
                             softWrap: true,
@@ -138,7 +138,7 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                                 responses.join('\n'),
                                 style: TextStyle(
                                   fontFamily: 'nanum',
-                                  fontSize: screenWidth * 0.07,
+                                  fontSize: screenWidth * 0.06,
                                   fontWeight: FontWeight.w700
                                 ),
                               ),

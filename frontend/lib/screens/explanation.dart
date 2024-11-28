@@ -122,7 +122,7 @@ class _ExplanationWidgetState extends State<ExplanationWidget> {
                                   '여기에 작가님의 답변 내용이 나타납니다!',
                                   style: TextStyle(
                                     fontFamily: 'nanum',
-                                    fontSize: screenWidth * 0.07,
+                                    fontSize: screenWidth * 0.06,
                                     fontWeight: FontWeight.w700
                                   ),
                                 ),
@@ -229,7 +229,7 @@ class _ExplanationWidgetState extends State<ExplanationWidget> {
                 ),
                 if (_listeningImagePosition != null)
                   Positioned(
-                    top: _listeningImagePosition!.dy - 170,
+                    top: _listeningImagePosition!.dy - 130,
                     left: _listeningImagePosition!.dx - 15,
                     child: Column(
                       children: [
@@ -260,7 +260,7 @@ class _ExplanationWidgetState extends State<ExplanationWidget> {
                   ),
                   if (_responseBoxPosition != null)
                     Positioned(
-                      top: _listeningImagePosition!.dy - 375,
+                      top: _listeningImagePosition!.dy - 330,
                       left: _listeningImagePosition!.dx - 100 ,
                       child: Column(
                         children: [

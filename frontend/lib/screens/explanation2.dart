@@ -197,8 +197,8 @@ class _Explanation2WidgetState extends State<Explanation2Widget> {
               ),
               if (_listeningImagePosition != null)
                 Positioned(
-                  top: _listeningImagePosition!.dy - 170,
-                  left: _listeningImagePosition!.dx - 130,
+                  top: _listeningImagePosition!.dy - 140,
+                  left: _listeningImagePosition!.dx - 120,
                   child: Column(
                     children: [
                       Container(
@@ -228,7 +228,7 @@ class _Explanation2WidgetState extends State<Explanation2Widget> {
                 ),
                 if (_homeIconPosition != null)
                 Positioned(
-                  top: _homeIconPosition!.dy - 160,
+                  top: _homeIconPosition!.dy - 115,
                   left: _homeIconPosition!.dx - 25,
                   child: Column(
                     children: [
@@ -259,7 +259,7 @@ class _Explanation2WidgetState extends State<Explanation2Widget> {
                 ),
                 if (_nextIconPosition != null)
                 Positioned(
-                  top: _nextIconPosition!.dy - 160,
+                  top: _nextIconPosition!.dy - 115,
                   left: _nextIconPosition!.dx - 60,
                   child: Column(
                     children: [

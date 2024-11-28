@@ -55,7 +55,7 @@ class LoadingWidget extends StatelessWidget {
                     CircleAvatar(
                       backgroundImage: AssetImage('assets/images/LoadingEcho.gif'),
                       backgroundColor: const Color(0xFFA4E6A6),
-                      radius: screenWidth * 0.4,
+                      radius: screenWidth * 0.39,
                     ),
                   ],
                 ),

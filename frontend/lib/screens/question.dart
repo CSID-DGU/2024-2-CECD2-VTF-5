@@ -78,7 +78,7 @@ class QuestionWidget extends ConsumerWidget {
         child: Text(
           text,
           style: const TextStyle(
-            fontSize: 30,
+            fontSize: 25,
             fontFamily: 'nanum',
             color: Colors.black,
           ),

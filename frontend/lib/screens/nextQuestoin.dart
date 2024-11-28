@@ -63,7 +63,7 @@ class _nextquestionWidgetState extends ConsumerState<nextquestionWidget> {
                     return;
                   }
 
-                  final result = await recordingService.sendResponsesToServer();
+                  final result = await recordingService.sendResponsesToServerDD();
                   if (result != null) {
                     Get.toNamed('/question'); // 페이지 이동
                   } else {
@@ -101,7 +101,7 @@ class _nextquestionWidgetState extends ConsumerState<nextquestionWidget> {
           text,
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 45,
+            fontSize: 40,
             fontFamily: 'nanum',
             color: Colors.black,
           ),

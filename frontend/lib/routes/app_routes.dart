@@ -33,8 +33,6 @@ class AppRoutes {
     GetPage(name: '/newPassword', page: () => NewPasswordWidget()),
     GetPage(name: '/question', page: ()=>QuestionWidget()),
     GetPage(name: '/nextQuestoin', page: ()=>nextquestionWidget()),
-
-
   ];
 }
 
