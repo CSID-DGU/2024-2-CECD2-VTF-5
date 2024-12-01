@@ -26,6 +26,7 @@ class _Explanation2WidgetState extends State<Explanation2Widget> {
     });
   }
 
+  // 다른 방법 사용해보기
   // 이미지나 박스 위치 계산
   void _getPositions() {
     final RenderBox? listeningRenderBox =
@@ -249,11 +250,6 @@ class _Explanation2WidgetState extends State<Explanation2Widget> {
                           textAlign: TextAlign.center,
                         ),
                       ),
-                      // Icon(
-                      //   Icons.arrow_upward,
-                      //   color: Colors.black,
-                      //   size: 30,
-                      // ),
                     ],
                   ),
                 ),
@@ -280,11 +276,6 @@ class _Explanation2WidgetState extends State<Explanation2Widget> {
                           textAlign: TextAlign.center,
                         ),
                       ),
-                      // Icon(
-                      //   Icons.arrow_upward,
-                      //   color: Colors.black,
-                      //   size: 30,
-                      // ),
                     ],
                   ),
                 ),

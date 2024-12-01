@@ -25,7 +25,7 @@ class _ExplanationWidgetState extends State<ExplanationWidget> {
       _getPositions();
     });
   }
-
+  // 다른 방법 사용해보기
   // 이미지나 박스 위치 계산
   void _getPositions() {
     final RenderBox? sttRenderBox =

@@ -94,7 +94,6 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                     ),
                     Expanded(
                       child: Padding(
-                        // padding: const EdgeInsets.only(left: 20, right: 20),
                         padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
                         child: SingleChildScrollView(
                           child: Text(

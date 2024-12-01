@@ -16,7 +16,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
 
   final AudioRecorder audioRecorder = AudioRecorder();
-  final AudioPlayer audioPlayer = AudioPlayer(); //
+  final AudioPlayer audioPlayer = AudioPlayer();
 
   String? recordingPath;
   bool isRecording = false, isPlaying = false;
@@ -26,7 +26,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: _recordingButton(),
-      body: _buildUI(), //
+      body: _buildUI(), 
     );
   }
 
@@ -94,7 +94,6 @@ class _HomePageState extends State<HomePage> {
             final Directory appDocumentsDir =
                 await getApplicationDocumentsDirectory();
             final String filePath = 
-              // .wav 오류떠서 .aac로 진행, mp3도 안됨...
                 p.join(appDocumentsDir.path, "recording.aac");
             await audioRecorder.start(
               const RecordConfig(),
@@ -112,7 +111,9 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-} //
+}
+
+
 //   //녹음파일 서버로 전송
 //   Future<void> sendFileToServer(String filePath) async {
 //     File audioFile = File(filePath);
