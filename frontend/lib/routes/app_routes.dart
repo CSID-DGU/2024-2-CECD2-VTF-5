@@ -15,7 +15,6 @@ import '../screens/newPassword.dart';
 import '../screens/question.dart';
 import '../screens/nextQuestoin.dart';
 
-
 class AppRoutes {
   static final routes = [
     GetPage(name: '/loading', page: () => LoadingWidget()),
@@ -31,8 +30,8 @@ class AppRoutes {
     GetPage(name: '/explanation', page: () => ExplanationWidget()),
     GetPage(name: '/explanation2', page: () => Explanation2Widget()),
     GetPage(name: '/newPassword', page: () => NewPasswordWidget()),
-    GetPage(name: '/question', page: ()=>QuestionWidget()),
-    GetPage(name: '/nextQuestoin', page: ()=>nextquestionWidget()),
+    GetPage(name: '/question', page: () => QuestionWidget()),
+    GetPage(name: '/nextQuestoin', page: () => nextquestionWidget()),
   ];
 }
 

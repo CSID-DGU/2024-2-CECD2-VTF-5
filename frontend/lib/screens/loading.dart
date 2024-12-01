@@ -9,7 +9,6 @@ class LoadingWidget extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
-    //// 2초 후 로딩화면 넘어가도록
     Future.delayed(const Duration(seconds: 2), () {
       Get.offNamed('/login');
     });
@@ -55,7 +54,7 @@ class LoadingWidget extends StatelessWidget {
                     CircleAvatar(
                       backgroundImage: AssetImage('assets/images/LoadingEcho.gif'),
                       backgroundColor: const Color(0xFFA4E6A6),
-                      radius: screenWidth * 0.39,
+                      radius: screenWidth * 0.4,
                     ),
                   ],
                 ),

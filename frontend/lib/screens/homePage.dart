@@ -173,7 +173,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                             width: 70,
                             height: 70,
                           ),
-                          // SizedBox(width: 5),
                           Text(
                             '나의 자서전 보기',
                             style: TextStyle(
