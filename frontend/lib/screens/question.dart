@@ -57,6 +57,9 @@ class QuestionWidget extends ConsumerWidget {
                   },
                 );
               }),
+              // 로딩 중일 경우 스피너
+              if (questionState == null)
+                CircularProgressIndicator(), // 로딩 표시
             ],
           ),
         ),
