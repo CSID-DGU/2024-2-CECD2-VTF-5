@@ -26,7 +26,7 @@ from ..dto.memberDto import LoginRequest
 from ..entity import member
 from ..dto import memberDto
 from ..service import tts, stt
-from ..prompt import complete_prompt, member_prompt
+from ..prompt import complete_prompt, member_prompt, another_question_prompt
 
 # 환경 변수 로드
 dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
@@ -75,6 +75,8 @@ def get_db():
 
 """ PromptTemplate 객체 생성 """
 member_life_prompt = PromptTemplate(input_variables=["chat_history", "last_answer"], template=member_prompt.life_prompt)
+# 다른 주제의 질문을 위한 프롬프트 템플릿
+another_prompt_template = PromptTemplate(input_variables=["chat_history", "last_answer"], template= another_question_prompt.another_prompt)
 autobiography_prompt = PromptTemplate(input_variables=["name", "age", "responses"],
                                       template=complete_prompt.biography_prompt)
 
@@ -91,7 +93,7 @@ async def generate_question(input_data: SpeechModel, db: Session = Depends(get_d
     gpt에게 질문 생성 요청
     """
     stt_input = input_data.stt_input  # JSON Body에서 텍스트 추출
-    
+
     # 사용자 ID 추출
     try:
         token_data = decode_access_token(token)
@@ -155,6 +157,85 @@ async def generate_question(input_data: SpeechModel, db: Session = Depends(get_d
     except Exception as e:
         print(f"General error in generating question from input: {str(e)}")
         raise HTTPException(status_code=500, detail="질문 생성 중 오류가 발생했습니다.")
+
+
+"""
+여기 함수는 유사/다른 부분만 차이가 있으므로 추후 최적화 해야함. 2024.12.26.
+"""
+@app.post("/generate_another_question")
+async def generate_another_question(
+        input_data: SpeechModel,
+        db: Session = Depends(get_db),
+        token: str = Depends(oauth2_scheme)
+):
+    """
+    gpt에게 다른 주제의 질문 생성 요청
+    """
+    stt_input = input_data.stt_input  # JSON Body에서 텍스트 추출
+
+    # 사용자 ID 추출
+    try:
+        token_data = decode_access_token(token)
+        user_id = token_data.get("sub")
+
+        if not user_id:
+            raise HTTPException(status_code=401, detail="유효하지 않은 사용자 토큰입니다.")
+    except HTTPException as e:
+        print(f"토큰 오류: {str(e)}")
+        raise e
+
+    try:
+        print(f"\n사용자의 입력값: {stt_input}")
+
+        # 1. 기존 요약 불러오기 (누적된 대화 맥락)
+        memory_summary = memory.load_memory_variables({})
+        existing_summary = memory_summary.get("history", "")
+
+        # 2. 새로운 사용자 입력을 기존 요약에 누적하여 새로운 요약 업데이트
+        updated_summary = f"{existing_summary}\n사용자 답변: {stt_input}"
+
+        # 3. 누적된 요약을 바탕으로 다른 주제의 질문 생성
+        prompt = another_prompt_template.format(chat_history=updated_summary, last_answer=stt_input)
+        response = client.invoke(prompt)
+
+        # 응답에서 질문을 추출
+        if hasattr(response, 'content'):
+            response_text = response.content
+        elif isinstance(response, list) and len(response) > 0:
+            response_text = response[0].content
+        else:
+            raise ValueError("응답 형식이 예상과 다릅니다.")
+
+        # 응답을 줄바꿈 기준으로 3개 질문 추출
+        questions = response_text.strip().split("\n")
+        questions = [q.strip() for q in questions if q.strip()][:3]
+
+        for i, question in enumerate(questions):
+            print(f"질문 {i + 1}: {question}")
+
+        # 4. 사용자 답변이 포함된 요약을 메모리에 저장하여 누적 유지
+        memory.save_context({"input": stt_input}, {"output": updated_summary})
+
+        # 사용자 summary 필드 업데이트
+        update_user_summary(db, user_id, updated_summary)
+
+        # 질문과 누적된 요약 반환
+        return {
+            "questions": questions,
+            "summary": updated_summary
+        }
+    except ValueError as e:
+        print(f"Validation Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Validation error: {str(e)}")
+    except asyncio.exceptions.CancelledError:
+        print("요청이 취소되었습니다.")
+        raise HTTPException(status_code=500, detail="요청이 취소되었습니다.")
+    except OpenAIError as e:
+        print(f"OpenAI API Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"OpenAI API 오류: {str(e)}")
+    except Exception as e:
+        print(f"General error in generating another question from input: {str(e)}")
+        raise HTTPException(status_code=500, detail="다른 주제의 질문 생성 중 오류가 발생했습니다.")
 
 
 def update_user_summary(db: Session, user_id: str, summary_text: str):
