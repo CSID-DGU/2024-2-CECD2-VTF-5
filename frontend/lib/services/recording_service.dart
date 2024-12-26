@@ -170,7 +170,7 @@ class RecordingService {
   }
 
   Future<QuestionModel?> sendResponsesToServerDD() async {
-    String url = "${AppConfig.apiBaseUrl}/generate_new_topic_question";
+    String url = "${AppConfig.apiBaseUrl}/generate_another_question";
 
     final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
@@ -236,9 +236,9 @@ class RecordingService {
         String decodedBody = utf8.decode(response.bodyBytes);
         Map<String, dynamic> responseBody = json.decode(decodedBody);
         print("Success Response: $responseBody");
-        print("Questions: ${responseBody['new_topic_questions']}");
+        print("Questions: ${responseBody['questions']}");
         QuestionModel questionModel =
-            QuestionModel.fromList(responseBody['new_topic_questions']);
+            QuestionModel.fromList(responseBody['questions']);
         return questionModel;
         // 필요하다면 텍스트를 화면에 표시하거나 로직에 활용
       } else {
