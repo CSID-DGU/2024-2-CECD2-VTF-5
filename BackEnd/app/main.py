@@ -15,10 +15,6 @@ from langchain.prompts import PromptTemplate
 from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, status, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-# html 템플릿 관련 (안쓰니까 일단 주석처리)
-from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse
-
 # py 파일들 불러오기
 from ..config.jwt import *
 from ..config.test_database import SessionLocal
@@ -34,6 +30,7 @@ load_dotenv(dotenv_path=dotenv_path)
 
 # OpenAI API 키를 환경 변수에서 가져오기
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+client = ChatOpenAI(api_key=OPENAI_API_KEY)  # OpenAI 클라이언트 초기화
 
 # Naver STT key
 client_id = os.getenv("YOUR_CLIENT_ID")
@@ -44,7 +41,6 @@ client_secret = os.getenv("YOUR_CLIENT_SECRET")
 
 # 최상위 2024~~에서 uvicorn BackEnd.app.main:app --reload
 app = FastAPI()
-client = ChatOpenAI(api_key=OPENAI_API_KEY)  # OpenAI 클라이언트 초기화
 
 """ CORS 설정 추가 """
 app.add_middleware(
@@ -59,7 +55,7 @@ app.add_middleware(
 memory = ConversationSummaryMemory(
     llm=client,
     max_token_limit=200,  # 요약의 기준이 되는 토큰 길이를 설정합니다.
-    return_messages=True,
+    return_messages=True
 )
 
 def get_db():
