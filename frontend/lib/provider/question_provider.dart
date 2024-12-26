@@ -22,6 +22,12 @@ class QuestionNotifier extends StateNotifier<QuestionModel?> {
   int? get selectedIndex => _selectedIndex;
 
   Future<void> fetchInitialData() async {
+    // 이미 데이터가 로드된 상태면 다시 호출하지 않음
+    if (state != null && state!.questions.isNotEmpty) {
+      print("이미 질문이 로드되었습니다.");
+      return; // 이미 로드된 상태라면 함수 종료
+    }
+    
     print("fetchInitialData() 호출됨"); // 초기화 로그
     print("State in Provider: ${state?.questions}"); // 상태 업데이트 로그
     try {
