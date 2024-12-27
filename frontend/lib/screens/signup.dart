@@ -117,7 +117,7 @@ class _SignupWidgetState extends State<SignupWidget> {
 
     final century = (back.startsWith('1') || back.startsWith('2')) ? 1900 : 2000;
 
-    return '${century + year}-$month-$day'; // 최종 생년월일 반환
+    return '${century + year}$month$day'; // 최종 생년월일 반환
   }
 
 

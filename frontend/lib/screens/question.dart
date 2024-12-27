@@ -21,8 +21,10 @@ class QuestionWidget extends ConsumerWidget {
     final questions = questionState?.questions ?? ["질문을 생성 중 입니다."];
 
     if (questionState == null) {
-      // 상태가 null일 경우만 초기화
-      questionNotifier.fetchInitialData();
+      Future.delayed(const Duration(seconds: 5), () {
+        // 상태가 null일 경우만 초기화
+        questionNotifier.fetchInitialData();
+      });
     }
 
     // questionNotifier.fetchInitialData(); //강제호출(비상탈출)
