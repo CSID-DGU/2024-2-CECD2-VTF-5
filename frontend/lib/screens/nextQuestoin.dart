@@ -43,17 +43,23 @@ class _nextquestionWidgetState extends ConsumerState<nextquestionWidget> {
                     return;
                   }
 
-                  final result = await recordingService.sendResponsesToServer();
-
                   final questionNotifier = ref.read(questionProvider.notifier);
-                  if (result != null) {
-                    questionNotifier.resetState();
-                    Get.toNamed('/question'); // 페이지 이동
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('질문 생성에 실패했습니다.')),
-                    );
-                  }
+                  questionNotifier.resetState();
+                  await questionNotifier.fetchInitialData(isSimilar: true);
+                  Get.toNamed('/question');
+
+                  // final result = await recordingService.sendResponsesToServer();
+
+                  // final questionNotifier = ref.read(questionProvider.notifier);
+                  // if (result != null) {
+                  //   questionNotifier.resetState();
+                  //   await questionNotifier.fetchInitialData(isSimilar: true);
+                  //   Get.toNamed('/question'); // 페이지 이동
+                  // } else {
+                  //   ScaffoldMessenger.of(context).showSnackBar(
+                  //     SnackBar(content: Text('질문 생성에 실패했습니다.')),
+                  //   );
+                  // }
                 }),
                 _buildButton(context, '다른\n질문받기', ()async{
                   final recordingService = ref.read(recordingServiceProvider); // RecordingService 인스턴스 가져오기
@@ -65,18 +71,25 @@ class _nextquestionWidgetState extends ConsumerState<nextquestionWidget> {
                     return;
                   }
 
-                  final result = await recordingService.sendResponsesToServerDD();
-
                   final questionNotifier = ref.read(questionProvider.notifier);
+                  questionNotifier.resetState();
+                  await questionNotifier.fetchInitialData(isSimilar: false);
+                  Get.toNamed('/question');
 
-                  if (result != null) {
-                    questionNotifier.resetState();
-                    Get.toNamed('/question'); // 페이지 이동
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('질문 생성에 실패했습니다.')),
-                    );
-                  }
+
+                  // final result = await recordingService.sendResponsesToServerDD();
+
+                  // final questionNotifier = ref.read(questionProvider.notifier);
+
+                  // if (result != null) {
+                  //   questionNotifier.resetState();
+                  //   await questionNotifier.fetchInitialData(isSimilar: false);
+                  //   Get.toNamed('/question'); // 페이지 이동
+                  // } else {
+                  //   ScaffoldMessenger.of(context).showSnackBar(
+                  //     SnackBar(content: Text('질문 생성에 실패했습니다.')),
+                  //   );
+                  // }
                 }),
                 _buildButton(context, '답변\n계속하기', () {
                   Navigator.pop(context);
